@@ -112,6 +112,9 @@ const els = {
     
     // Settings
     btnClearData: document.getElementById('btn-clear-data'),
+    btnExportData: document.getElementById('btn-export-data'),
+    btnImportData: document.getElementById('btn-import-data'),
+    fileImport: document.getElementById('file-import'),
     
     // Budgets
     budgetProgressContainer: document.getElementById('budget-progress-container'),
@@ -256,16 +259,66 @@ const setupEventListeners = () => {
     }
 
     // Settings
-    els.btnClearData.addEventListener('click', () => {
-        if(confirm('Bạn có chắc chắn muốn xóa toàn bộ dữ liệu? Hành động này không thể hoàn tác.')) {
-            state.transactions = [];
-            state.budgets = {};
-            saveData();
-            updateUI();
-            renderSettings();
-            alert('Đã xóa dữ liệu!');
-        }
-    });
+    if(els.btnClearData) {
+        els.btnClearData.addEventListener('click', () => {
+            if(confirm('Bạn có chắc chắn muốn xóa toàn bộ dữ liệu? Hành động này không thể hoàn tác.')) {
+                state.transactions = [];
+                state.budgets = {};
+                saveData();
+                updateUI();
+                renderSettings();
+                alert('Đã xóa dữ liệu!');
+            }
+        });
+    }
+
+    if(els.btnExportData) {
+        els.btnExportData.addEventListener('click', () => {
+            const dataStr = JSON.stringify(state, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const date = new Date().toISOString().split('T')[0];
+            link.href = url;
+            link.download = `family_finance_backup_${date}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        });
+    }
+
+    if(els.btnImportData) {
+        els.btnImportData.addEventListener('click', () => {
+            els.fileImport.click();
+        });
+    }
+
+    if(els.fileImport) {
+        els.fileImport.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const importedState = JSON.parse(event.target.result);
+                    
+                    // Basic validation
+                    if (importedState.transactions && Array.isArray(importedState.transactions)) {
+                        if (confirm('Bạn có muốn nạp dữ liệu từ file này? Dữ liệu hiện tại trên máy sẽ bị thay thế.')) {
+                            state = importedState;
+                            saveData();
+                            location.reload(); // Reload to ensure everything is refreshed
+                        }
+                    } else {
+                        alert('File không đúng định dạng dữ liệu của ứng dụng.');
+                    }
+                } catch (err) {
+                    alert('Lỗi khi đọc file. Vui lòng kiểm tra lại file của bạn.');
+                }
+            };
+            reader.readAsText(file);
+        });
+    }
 
     // Category Modal Triggers
     const openCatModal = () => {
