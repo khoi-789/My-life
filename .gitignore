@@ -1,0 +1,4 @@
+.gemini/
+.git/
+node_modules/
+*.log

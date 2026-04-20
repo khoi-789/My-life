@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gia Đình | Quản Lý Tài Chính</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel">
+            <div class="logo">
+                <i class="ph-fill ph-wallet"></i>
+                <span>Gia Đình <span class="highlight">Finance</span></span>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-tab="dashboard">
+                    <i class="ph ph-squares-four"></i> Tổng quan
+                </a>
+                <a href="#" class="nav-item" data-tab="transactions">
+                    <i class="ph ph-receipt"></i> Giao dịch
+                </a>
+                <a href="#" class="nav-item" data-tab="reports">
+                    <i class="ph ph-chart-pie-slice"></i> Báo cáo
+                </a>
+                <a href="#" class="nav-item" data-tab="settings">
+                    <i class="ph ph-gear"></i> Cài đặt
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-primary w-full" id="btn-add-transaction-sidebar">
+                    <i class="ph ph-plus"></i> Thêm Giao Dịch
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h1 id="page-title">Tổng quan</h1>
+                    <p id="current-date" class="subtitle">Tháng 4, 2026</p>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn"><i class="ph ph-bell"></i></button>
+                    <div class="user-profile">
+                        <img src="https://i.pravatar.cc/150?img=11" alt="User Avatar">
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Tab -->
+            <div class="tab-content active" id="tab-dashboard">
+                <!-- Summary Cards -->
+                <div class="summary-cards">
+                    <div class="card glass-panel gradient-card">
+                        <div class="card-icon"><i class="ph ph-bank"></i></div>
+                        <div class="card-info">
+                            <span class="card-label">Tổng Số Dư</span>
+                            <h2 class="card-amount" id="total-balance">0đ</h2>
+                        </div>
+                    </div>
+                    <div class="card glass-panel income-card">
+                        <div class="card-icon"><i class="ph ph-trend-up"></i></div>
+                        <div class="card-info">
+                            <span class="card-label">Tổng Thu</span>
+                            <h2 class="card-amount success-text" id="total-income">0đ</h2>
+                        </div>
+                    </div>
+                    <div class="card glass-panel expense-card">
+                        <div class="card-icon"><i class="ph ph-trend-down"></i></div>
+                        <div class="card-info">
+                            <span class="card-label">Tổng Chi</span>
+                            <h2 class="card-amount danger-text" id="total-expense">0đ</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- Recent Transactions -->
+                    <div class="card glass-panel col-span-2">
+                        <div class="card-header">
+                            <h3>Giao dịch gần đây</h3>
+                            <button class="link-btn" id="btn-view-all">Xem tất cả</button>
+                        </div>
+                        <div class="transactions-list-mini" id="recent-transactions">
+                            <!-- Transactions rendered by JS -->
+                            <div class="empty-state">Không có giao dịch nào</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Chart -->
+                    <div class="card glass-panel col-span-1">
+                        <div class="card-header">
+                            <h3>Chi tiêu tháng này</h3>
+                        </div>
+                        <div class="chart-container-mini">
+                            <canvas id="miniExpenseChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget Tracking -->
+                <div class="card glass-panel" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <h3>Kiểm soát Ngân sách tháng này</h3>
+                    </div>
+                    <div class="budget-list" id="budget-progress-container">
+                        <!-- Budget progress bars rendered by JS -->
+                        <div class="empty-state">Đang tải dữ liệu...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transactions Tab -->
+            <div class="tab-content" id="tab-transactions">
+                <div class="card glass-panel full-height">
+                    <div class="card-header flex-center" style="flex-wrap:wrap; gap:16px;">
+                        <h3>Lịch sử giao dịch</h3>
+                        <div class="actions-group" style="display:flex; flex-wrap:wrap; gap:8px;">
+                            <select id="filter-year" class="glass-input small">
+                                <option value="all">Năm: Tất cả</option>
+                                <!-- JS populate -->
+                            </select>
+                            <select id="filter-month" class="glass-input small">
+                                <option value="all">Tháng: Tất cả</option>
+                                <option value="1">Tháng 1</option>
+                                <option value="2">Tháng 2</option>
+                                <option value="3">Tháng 3</option>
+                                <option value="4">Tháng 4</option>
+                                <option value="5">Tháng 5</option>
+                                <option value="6">Tháng 6</option>
+                                <option value="7">Tháng 7</option>
+                                <option value="8">Tháng 8</option>
+                                <option value="9">Tháng 9</option>
+                                <option value="10">Tháng 10</option>
+                                <option value="11">Tháng 11</option>
+                                <option value="12">Tháng 12</option>
+                            </select>
+                            <select id="filter-day" class="glass-input small">
+                                <option value="all">Ngày: Tất cả</option>
+                                <!-- JS populate 1->31 -->
+                            </select>
+                            <select id="filter-type" class="glass-input small">
+                                <option value="all">Loại: Tất cả</option>
+                                <option value="income">Chỉ Thu</option>
+                                <option value="expense">Chỉ Chi</option>
+                            </select>
+                            <select id="filter-category" class="glass-input small">
+                                <option value="all">Danh mục: Tất cả</option>
+                                <!-- Rendered by JS -->
+                            </select>
+                            <button class="btn btn-primary small" id="btn-add-transaction-page">
+                                <i class="ph ph-plus"></i> Thêm mới
+                            </button>
+                        </div>
+                    </div>
+                    <div class="transactions-table-container">
+                        <table class="transactions-table">
+                            <thead>
+                                <tr>
+                                    <th>Mô tả</th>
+                                    <th>Danh mục</th>
+                                    <th>Ngày</th>
+                                    <th class="text-right">Số tiền</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-body">
+                                <!-- Rendered by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Tab -->
+            <div class="tab-content" id="tab-reports">
+                <div class="dashboard-grid h-full">
+                    <div class="card glass-panel col-span-2">
+                        <div class="card-header">
+                            <h3>Lưu lượng dòng tiền</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="cashflowChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card glass-panel col-span-1">
+                        <div class="card-header">
+                            <h3>Phân bổ chi tiêu</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="expenseCategoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Tab -->
+            <div class="tab-content" id="tab-settings">
+                <div class="dashboard-grid h-full">
+                    <div class="card glass-panel col-span-1">
+                        <div class="card-header flex-center">
+                            <h3>Hạn mức (Hàng tháng)</h3>
+                            <button class="btn btn-secondary small" id="btn-open-category-modal">+ Thêm hạng mục</button>
+                        </div>
+                        <div class="settings-content" id="budget-settings-container">
+                            <!-- Input lists for each category generated by JS -->
+                        </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-span-2" style="display:flex; flex-direction:column; gap:1.5rem;">
+                        <div class="card glass-panel">
+                            <div class="card-header">
+                                <h3>Chú thích Ngân sách</h3>
+                            </div>
+                            <div class="settings-content" style="padding: 1.5rem;">
+                                <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; margin: 0; color: var(--text-muted);">
+                                    <li style="display:flex; align-items:center; gap:8px;"><span style="color: var(--safe-color); font-size:1.2rem;">🟢</span> <span><strong>Màu xanh:</strong> Đang an toàn.</span></li>
+                                    <li style="display:flex; align-items:center; gap:8px;"><span style="color: var(--warning-color); font-size:1.2rem;">🟠</span> <span><strong>Màu cam:</strong> Đã chi hơn 80% hạn mức (cẩn thận).</span></li>
+                                    <li style="display:flex; align-items:center; gap:8px;"><span style="color: var(--danger-color); font-size:1.2rem;">🔴</span> <span><strong>Màu đỏ:</strong> Đã vượt hạn mức chi tiêu đặt ra.</span></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="card glass-panel">
+                            <div class="card-header">
+                                <h3>Hệ thống</h3>
+                            </div>
+                            <div class="settings-content">
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <h4>Xóa toàn bộ dữ liệu</h4>
+                                        <p>Hành động này không thể hoàn tác.</p>
+                                    </div>
+                                    <button class="btn btn-danger" id="btn-clear-data">Xóa dữ liệu</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal Form -->
+    <div class="modal-overlay" id="transaction-modal">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3 id="modal-title">Thêm giao dịch</h3>
+                <button class="icon-btn btn-close" id="btn-close-modal"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="transaction-form">
+                    <input type="hidden" id="trans-id">
+                    
+                    <div class="form-group type-selector">
+                        <label class="radio-label">
+                            <input type="radio" name="type" value="expense" checked>
+                            <span class="radio-box expense-box"><i class="ph ph-trend-down"></i> Chi tiêu</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="type" value="income">
+                            <span class="radio-box income-box"><i class="ph ph-trend-up"></i> Thu nhập</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Số tiền (VNĐ)</label>
+                        <div class="input-with-icon">
+                            <i class="ph ph-coins"></i>
+                            <input type="text" id="trans-amount" class="glass-input" required placeholder="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Danh mục</label>
+                        <div class="input-with-icon">
+                            <i class="ph ph-tag"></i>
+                            <select id="trans-category" class="glass-input" required>
+                                <!-- Categories populated by JS based on type -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ngày</label>
+                        <div class="input-with-icon">
+                            <i class="ph ph-calendar"></i>
+                            <input type="date" id="trans-date" class="glass-input" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ghi chú / Mô tả</label>
+                        <div class="input-with-icon">
+                            <i class="ph ph-text-aa"></i>
+                            <input type="text" id="trans-note" class="glass-input" placeholder="Mua sắm, lương tháng..." required>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary w-full" id="btn-cancel">Hủy</button>
+                        <button type="submit" class="btn btn-primary w-full">Lưu giao dịch</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Category Modal -->
+    <div class="modal-overlay" id="category-modal">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3 id="cat-modal-title">Thêm hạng mục mới</h3>
+                <button class="icon-btn btn-close" id="btn-close-category-modal"><i class="ph ph-x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="category-form">
+                    <input type="hidden" id="edit-cat-id">
+                    
+                    <div class="form-group type-selector">
+                        <label class="radio-label">
+                            <input type="radio" name="cat_type" value="expense" checked>
+                            <span class="radio-box expense-box"><i class="ph ph-trend-down"></i> Khoản Chi</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="cat_type" value="income">
+                            <span class="radio-box income-box"><i class="ph ph-trend-up"></i> Khoản Thu</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Biểu tượng (Chọn nhanh hoặc tự gõ)</label>
+                        <div class="emoji-grid" id="emoji-picker">
+                            <span class="emoji-option">🏠</span>
+                            <span class="emoji-option">🍕</span>
+                            <span class="emoji-option">🛒</span>
+                            <span class="emoji-option">🚗</span>
+                            <span class="emoji-option">📚</span>
+                            <span class="emoji-option">💊</span>
+                            <span class="emoji-option">🍼</span>
+                            <span class="emoji-option">🐶</span>
+                            <span class="emoji-option">👕</span>
+                            <span class="emoji-option">🎮</span>
+                            <span class="emoji-option">✈️</span>
+                            <span class="emoji-option">💝</span>
+                            <span class="emoji-option">💡</span>
+                            <span class="emoji-option">📱</span>
+                            <span class="emoji-option">💵</span>
+                            <span class="emoji-option">📈</span>
+                        </div>
+                        <div class="input-with-icon">
+                            <i class="ph ph-smiley"></i>
+                            <input type="text" id="cat-icon" class="glass-input" required placeholder="Ví dụ: 🍼, 🏠, 🐶" maxlength="5">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tên hạng mục</label>
+                        <div class="input-with-icon">
+                            <i class="ph ph-text-aa"></i>
+                            <input type="text" id="cat-name" class="glass-input" required placeholder="Ví dụ: Tiền bỉm sữa">
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="budget-input-group">
+                        <label>Hạn mức chi tiêu hàng tháng (VNĐ)</label>
+                        <div class="input-with-icon">
+                            <i class="ph ph-coins"></i>
+                            <input type="text" id="cat-budget" class="glass-input" placeholder="0 (Bỏ trống nếu không giới hạn)">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary w-full" id="btn-cancel-category">Hủy</button>
+                        <button type="submit" class="btn btn-primary w-full">Tạo hạng mục</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
