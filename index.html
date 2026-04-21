@@ -22,7 +22,10 @@
 <body>
     <div class="app-container">
         <!-- Sidebar -->
-        <aside class="sidebar glass-panel">
+        <aside class="sidebar glass-panel" id="sidebar">
+            <button class="icon-btn mobile-only" id="btn-close-sidebar" style="position: absolute; right: 15px; top: 15px;">
+                <i class="ph ph-x"></i>
+            </button>
             <div class="logo">
                 <i class="ph-fill ph-wallet"></i>
                 <span>Gia Đình <span class="highlight">Finance</span></span>
@@ -53,7 +56,12 @@
             <!-- Header -->
             <header class="top-header">
                 <div class="header-title">
-                    <h1 id="page-title">Tổng quan</h1>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <button class="icon-btn mobile-only" id="btn-toggle-sidebar">
+                            <i class="ph ph-list"></i>
+                        </button>
+                        <h1 id="page-title">Tổng quan</h1>
+                    </div>
                     <p id="current-date" class="subtitle">Tháng 4, 2026</p>
                 </div>
                 <div class="header-actions">

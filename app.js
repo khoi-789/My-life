@@ -168,6 +168,11 @@ const els = {
     btnImportData: document.getElementById('btn-import-data'),
     fileImport: document.getElementById('file-import'),
     
+    // Sidebar Mobile
+    sidebar: document.getElementById('sidebar'),
+    btnToggleSidebar: document.getElementById('btn-toggle-sidebar'),
+    btnCloseSidebar: document.getElementById('btn-close-sidebar'),
+    
     // Budgets
     budgetProgressContainer: document.getElementById('budget-progress-container'),
     budgetSettingsContainer: document.getElementById('budget-settings-container'),
@@ -248,6 +253,27 @@ const setupEventListeners = () => {
     els.btnCloseModal.addEventListener('click', closeModal);
     els.btnCancelModal.addEventListener('click', closeModal);
     
+    // Sidebar Toggle
+    if (els.btnToggleSidebar) {
+        els.btnToggleSidebar.addEventListener('click', () => {
+            els.sidebar.classList.add('active');
+        });
+    }
+    if (els.btnCloseSidebar) {
+        els.btnCloseSidebar.addEventListener('click', () => {
+            els.sidebar.classList.remove('active');
+        });
+    }
+
+    // Close sidebar on click outside on mobile
+    document.addEventListener('click', (e) => {
+        if (window.innerWidth <= 768 && els.sidebar.classList.contains('active')) {
+            if (!els.sidebar.contains(e.target) && !els.btnToggleSidebar.contains(e.target)) {
+                els.sidebar.classList.remove('active');
+            }
+        }
+    });
+
     // Close modal on click outside
     els.modal.addEventListener('click', (e) => {
         if(e.target === els.modal) closeModal();
@@ -559,22 +585,36 @@ window.deleteCategory = (id, type) => {
 const switchTab = (tabId) => {
     // Update active logic
     els.tabs.forEach(t => t.classList.remove('active'));
-    document.querySelector(`.nav-item[data-tab="${tabId}"]`).classList.add('active');
+    const activeTab = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
+    if(activeTab) activeTab.classList.add('active');
 
     els.tabContents.forEach(c => c.classList.remove('active'));
-    document.getElementById(`tab-${tabId}`).classList.add('active');
+    const activeContent = document.getElementById(`tab-${tabId}`);
+    if(activeContent) activeContent.classList.add('active');
 
     // Page Subject Title Update
     const pageTitle = document.getElementById('page-title');
-    if(tabId === 'dashboard') pageTitle.textContent = 'Tổng quan';
-    if(tabId === 'transactions') pageTitle.textContent = 'Lịch sử giao dịch';
-    if(tabId === 'reports') pageTitle.textContent = 'Báo cáo thông minh';
-    if(tabId === 'settings') pageTitle.textContent = 'Cài đặt hệ thống';
+    if(pageTitle) {
+        const titles = {
+            'dashboard': 'Tổng quan',
+            'transactions': 'Lịch sử giao dịch',
+            'reports': 'Báo cáo thông minh',
+            'settings': 'Cài đặt hệ thống'
+        };
+        pageTitle.textContent = titles[tabId];
+    }
 
-    // Rerender specific tab contents (especially charts)
-    if(tabId === 'reports') {
+    // Auto-close sidebar on mobile
+    if (window.innerWidth <= 768 && els.sidebar) {
+        els.sidebar.classList.remove('active');
+    }
+
+    // Rerender charts if needed
+    if(tabId === 'reports' || tabId === 'dashboard') {
         renderCharts();
     }
+    
+    updateUI();
 };
 
 // --- Form Logic ---
