@@ -727,7 +727,24 @@ input:checked + .income-box {
     }
 
     .modal-content {
-        max-width: 90%;
-        margin: 0 auto;
+        max-width: 95%;
+        padding: 20px 16px;
+    }
+
+    .transactions-table th, 
+    .transactions-table td {
+        padding: 12px 8px;
+        font-size: 13px;
+    }
+
+    .transactions-table-container {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-top: 10px;
+    }
+
+    .transactions-table {
+        min-width: 450px; /* Force minimum width to trigger scroll on narrow screens */
     }
 }
