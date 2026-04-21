@@ -244,18 +244,24 @@
                                 <h3>Hệ thống</h3>
                             </div>
                             <div class="settings-content">
-                                    <div class="setting-item">
+                                    <div class="setting-item" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);">
                                         <div class="setting-info">
-                                            <h4>Sao lưu & Khôi phục</h4>
-                                            <p>Chuyển dữ liệu giữa các thiết bị của bạn.</p>
+                                            <h4 style="color: var(--primary-color); display: flex; align-items: center; gap: 8px;">
+                                                <i class="ph ph-cloud-arrow-up"></i> Đồng bộ đa thiết bị
+                                            </h4>
+                                            <p>Sao lưu dữ liệu để mang sang điện thoại hoặc máy tính khác.</p>
                                         </div>
-                                        <div style="display:flex; gap:8px;">
-                                            <button class="btn btn-secondary small" id="btn-export-data"><i class="ph ph-download-simple"></i> Sao lưu</button>
-                                            <button class="btn btn-secondary small" id="btn-import-data"><i class="ph ph-upload-simple"></i> Khôi phục</button>
+                                        <div style="display:flex; gap:10px; margin-top: 10px;">
+                                            <button class="btn btn-primary small" id="btn-export-data" style="flex:1; justify-content:center;">
+                                                <i class="ph ph-download-simple"></i> Sao lưu (Tải về)
+                                            </button>
+                                            <button class="btn btn-secondary small" id="btn-import-data" style="flex:1; justify-content:center; background: rgba(255,255,255,0.1);">
+                                                <i class="ph ph-upload-simple"></i> Khôi phục (Mở file)
+                                            </button>
                                             <input type="file" id="file-import" style="display:none;" accept=".json">
                                         </div>
                                     </div>
-                                    <div class="setting-item">
+                                    <div class="setting-item" style="border-top: 1px solid rgba(255,255,255,0.05); padding-top: 15px;">
                                         <div class="setting-info">
                                             <h4>Xóa toàn bộ dữ liệu</h4>
                                             <p>Hành động này không thể hoàn tác.</p>
