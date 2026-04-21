@@ -1,7 +1,4 @@
-// --- Firebase Integration ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
+// --- Firebase Configuration ---
 const firebaseConfig = {
   apiKey: "AIzaSyAGwlGB_nowZWAjyz1fGRy30ZzwV5-igGY",
   authDomain: "mylife-a01e7.firebaseapp.com",
@@ -12,9 +9,11 @@ const firebaseConfig = {
   measurementId: "G-1HKG64KXS2"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Initialize Firebase (Avoid re-init if already initialized)
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
 
 // Household ID (for private sync)
 let householdId = localStorage.getItem('family_finance_household_id');
@@ -22,7 +21,7 @@ if (!householdId) {
     householdId = 'h_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('family_finance_household_id', householdId);
 }
-const docRef = doc(db, "households", householdId);
+const docRef = db.collection("households").doc(householdId);
 
 // --- Constants & Config ---
 const STORAGE_KEY = 'family_finance_data';
@@ -91,8 +90,8 @@ const loadData = async () => {
 
     // 2. Load from Firebase Cloud
     try {
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
+        const docSnap = await docRef.get();
+        if (docSnap.exists) {
             const cloudData = docSnap.data();
             // Merge or replace (here we replace with cloud since it's the source of truth)
             state = cloudData;
@@ -105,15 +104,15 @@ const loadData = async () => {
                 state.budgets = {};
                 state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
             }
-            await saveData();
+            await saveData(); // Initial push to cloud
         }
     } catch (e) {
         console.error("Cloud Error:", e);
     }
 
     // 3. Set up Real-time Sync
-    onSnapshot(docRef, (doc) => {
-        if (doc.exists()) {
+    docRef.onSnapshot((doc) => {
+        if (doc.exists) {
             const data = doc.data();
             // Check if there are changes to avoid infinite UI loops
             if (JSON.stringify(data) !== JSON.stringify(state)) {
@@ -132,7 +131,7 @@ const saveDataLocal = () => {
 const saveData = async () => {
     saveDataLocal();
     try {
-        await setDoc(docRef, state);
+        await docRef.set(state);
     } catch (e) {
         console.error("Error saving to cloud:", e);
     }
