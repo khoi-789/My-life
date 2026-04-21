@@ -15,12 +15,8 @@ if (!firebase.apps.length) {
 }
 const db = firebase.firestore();
 
-// Household ID (for private sync)
-let householdId = localStorage.getItem('family_finance_household_id');
-if (!householdId) {
-    householdId = 'h_' + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem('family_finance_household_id', householdId);
-}
+// Household ID (Cố định để đồng bộ tự động giữa các thiết bị)
+const householdId = 'family_khoi789'; 
 const docRef = db.collection("households").doc(householdId);
 
 // --- Constants & Config ---
@@ -398,31 +394,9 @@ const setupEventListeners = () => {
         });
     }
 
-    // Sync Code Listeners
+    // Sync Code Display
     const syncCodeInput = document.getElementById('sync-code-input');
     if (syncCodeInput) syncCodeInput.value = householdId;
-
-    const btnCopy = document.getElementById('btn-copy-sync-code');
-    if (btnCopy) {
-        btnCopy.addEventListener('click', () => {
-            syncCodeInput.select();
-            document.execCommand('copy');
-            alert('Đã sao chép mã đồng bộ!');
-        });
-    }
-
-    const btnChange = document.getElementById('btn-change-sync-code');
-    if (btnChange) {
-        btnChange.addEventListener('click', () => {
-            const newCode = prompt('Nhập mã đồng bộ từ thiết bị khác để kết nối dữ liệu:', householdId);
-            if (newCode && newCode !== householdId) {
-                if (confirm('Ứng dụng sẽ tải lại và kết nối với dữ liệu mới. Bạn có chắc chắn?')) {
-                    localStorage.setItem('family_finance_household_id', newCode.trim());
-                    location.reload();
-                }
-            }
-        });
-    }
 
     // Category Modal Triggers
     const openCatModal = () => {
