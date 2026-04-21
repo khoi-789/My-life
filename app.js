@@ -1,6 +1,28 @@
-/**
- * Family Finance App - Core Logic
- */
+// --- Firebase Integration ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAGwlGB_nowZWAjyz1fGRy30ZzwV5-igGY",
+  authDomain: "mylife-a01e7.firebaseapp.com",
+  projectId: "mylife-a01e7",
+  storageBucket: "mylife-a01e7.firebasestorage.app",
+  messagingSenderId: "570920781846",
+  appId: "1:570920781846:web:7ca009b8fc659ec8e3cd37",
+  measurementId: "G-1HKG64KXS2"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Household ID (for private sync)
+let householdId = localStorage.getItem('family_finance_household_id');
+if (!householdId) {
+    householdId = 'h_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('family_finance_household_id', householdId);
+}
+const docRef = doc(db, "households", householdId);
 
 // --- Constants & Config ---
 const STORAGE_KEY = 'family_finance_data';
@@ -57,32 +79,63 @@ const getCategoryById = (type, id) => {
 };
 
 // --- Storage API ---
-const loadData = () => {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (data) {
-        const parsed = JSON.parse(data);
-        if (Array.isArray(parsed)) {
-            // Upgrade old data structure
-            state.transactions = parsed;
-            state.budgets = {};
-            state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-            saveData();
-        } else {
-            state = parsed;
-            if (!state.budgets) state.budgets = {};
-            if (!state.categories) state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-        }
-    } else {
-        // Load dummy data for first time user
-        state.transactions = dummyData;
-        state.budgets = {};
-        state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-        saveData();
+const loadData = async () => {
+    // 1. Try to load from LocalStorage first (for speed)
+    const localData = localStorage.getItem(STORAGE_KEY);
+    if (localData) {
+        state = JSON.parse(localData);
+        if (!state.budgets) state.budgets = {};
+        if (!state.categories) state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+        updateUI();
     }
+
+    // 2. Load from Firebase Cloud
+    try {
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            const cloudData = docSnap.data();
+            // Merge or replace (here we replace with cloud since it's the source of truth)
+            state = cloudData;
+            saveDataLocal();
+            updateUI();
+        } else {
+            // First time cloud setup
+            if (!localData) {
+                state.transactions = dummyData;
+                state.budgets = {};
+                state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+            }
+            await saveData();
+        }
+    } catch (e) {
+        console.error("Cloud Error:", e);
+    }
+
+    // 3. Set up Real-time Sync
+    onSnapshot(docRef, (doc) => {
+        if (doc.exists()) {
+            const data = doc.data();
+            // Check if there are changes to avoid infinite UI loops
+            if (JSON.stringify(data) !== JSON.stringify(state)) {
+                state = data;
+                saveDataLocal();
+                updateUI();
+            }
+        }
+    });
 };
 
-const saveData = () => {
+const saveDataLocal = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+};
+
+const saveData = async () => {
+    saveDataLocal();
+    try {
+        await setDoc(docRef, state);
+    } catch (e) {
+        console.error("Error saving to cloud:", e);
+    }
 };
 
 // --- DOM Elements ---
@@ -149,8 +202,8 @@ let charts = {
 };
 
 // --- Initialization ---
-const init = () => {
-    loadData();
+const init = async () => {
+    await loadData();
     setupEventListeners();
     updateUI();
     
@@ -320,6 +373,32 @@ const setupEventListeners = () => {
         });
     }
 
+    // Sync Code Listeners
+    const syncCodeInput = document.getElementById('sync-code-input');
+    if (syncCodeInput) syncCodeInput.value = householdId;
+
+    const btnCopy = document.getElementById('btn-copy-sync-code');
+    if (btnCopy) {
+        btnCopy.addEventListener('click', () => {
+            syncCodeInput.select();
+            document.execCommand('copy');
+            alert('Đã sao chép mã đồng bộ!');
+        });
+    }
+
+    const btnChange = document.getElementById('btn-change-sync-code');
+    if (btnChange) {
+        btnChange.addEventListener('click', () => {
+            const newCode = prompt('Nhập mã đồng bộ từ thiết bị khác để kết nối dữ liệu:', householdId);
+            if (newCode && newCode !== householdId) {
+                if (confirm('Ứng dụng sẽ tải lại và kết nối với dữ liệu mới. Bạn có chắc chắn?')) {
+                    localStorage.setItem('family_finance_household_id', newCode.trim());
+                    location.reload();
+                }
+            }
+        });
+    }
+
     // Category Modal Triggers
     const openCatModal = () => {
         els.catForm.reset();
@@ -403,6 +482,78 @@ const setupEventListeners = () => {
         updateUI();
         alert(catId ? 'Đã cập nhật hạng mục!' : 'Đã thêm hạng mục mới thành công!');
     });
+};
+
+// --- Exposure to Global (for onclick events) ---
+window.editTransaction = (id) => {
+    const t = state.transactions.find(t => t.id === id);
+    if(!t) return;
+    
+    document.getElementById('trans-id').value = t.id;
+    els.amountInput.value = new Intl.NumberFormat('vi-VN').format(t.amount);
+    
+    const typeRadio = document.querySelector(`input[name="type"][value="${t.type}"]`);
+    if(typeRadio) {
+        typeRadio.checked = true;
+        populateCategories(t.type);
+    }
+    
+    els.categorySelect.value = t.categoryId;
+    els.dateInput.value = t.date;
+    els.noteInput.value = t.note;
+    
+    document.getElementById('modal-title').textContent = 'Chỉnh sửa giao dịch';
+    els.modal.classList.add('active');
+};
+
+window.deleteTransaction = (id) => {
+    if(confirm('Bạn có chắc chắn muốn xóa giao dịch này?')) {
+        state.transactions = state.transactions.filter(t => t.id !== id);
+        saveData();
+        updateUI();
+    }
+};
+
+window.editCategory = (id, type) => {
+    const cat = state.categories[type].find(c => c.id === id);
+    if (!cat) return;
+    
+    const radio = document.querySelector(`input[name="cat_type"][value="${type}"]`);
+    if(radio) radio.checked = true;
+    
+    els.editCatIdInput.value = cat.id;
+    els.catIconInput.value = cat.icon;
+    els.catNameInput.value = cat.name;
+
+    if (type === 'expense' && state.budgets && state.budgets[id]) {
+        els.catBudgetInput.value = new Intl.NumberFormat('vi-VN').format(state.budgets[id]);
+    } else {
+        els.catBudgetInput.value = '';
+    }
+    
+    if (els.budgetInputGroup) {
+        els.budgetInputGroup.style.display = type === 'expense' ? 'block' : 'none';
+    }
+
+    els.catModalTitle.textContent = 'Chỉnh sửa hạng mục';
+    els.catModal.classList.add('active');
+};
+
+window.deleteCategory = (id, type) => {
+    if(confirm(`Bạn có chắc muốn xóa hạng mục này? Các giao dịch cũ sẽ được chuyển vào mục "Khác".`)) {
+        // Move transactions to 'other'
+        state.transactions.forEach(t => {
+            if(t.categoryId === id) t.categoryId = 'other';
+        });
+        
+        // Remove from state
+        state.categories[type] = state.categories[type].filter(c => c.id !== id);
+        if(state.budgets[id]) delete state.budgets[id];
+        
+        saveData();
+        updateUI();
+        renderSettings();
+    }
 };
 
 // --- Navigation ---

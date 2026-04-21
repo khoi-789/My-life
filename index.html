@@ -244,19 +244,34 @@
                                 <h3>Hệ thống</h3>
                             </div>
                             <div class="settings-content">
-                                    <div class="setting-item" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                                    <div class="setting-item" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1);">
                                         <div class="setting-info">
                                             <h4 style="color: var(--primary-color); display: flex; align-items: center; gap: 8px;">
-                                                <i class="ph ph-cloud-arrow-up"></i> Đồng bộ đa thiết bị
+                                                <i class="ph ph-cloud-arrow-up"></i> Đồng bộ Đám mây (Firebase)
                                             </h4>
-                                            <p>Sao lưu dữ liệu để mang sang điện thoại hoặc máy tính khác.</p>
+                                            <p>Dùng mã này trên điện thoại để xem cùng dữ liệu.</p>
+                                        </div>
+                                        <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                                            <div style="display: flex; gap: 8px;">
+                                                <input type="text" id="sync-code-input" class="glass-input" readonly style="flex: 1; font-family: monospace; letter-spacing: 1px; font-size: 14px;">
+                                                <button class="btn btn-secondary small" id="btn-copy-sync-code" title="Sao chép"><i class="ph ph-copy"></i></button>
+                                            </div>
+                                            <button class="btn btn-secondary small" id="btn-change-sync-code" style="font-size: 12px; opacity: 0.7;">Kết nối mã khác...</button>
+                                        </div>
+                                    </div>
+                                    <div class="setting-item" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                                        <div class="setting-info">
+                                            <h4 style="color: var(--primary-color); display: flex; align-items: center; gap: 8px;">
+                                                <i class="ph ph-hard-drive"></i> Sao lưu thủ công
+                                            </h4>
+                                            <p>Tải file JSON về máy dự phòng.</p>
                                         </div>
                                         <div style="display:flex; gap:10px; margin-top: 10px;">
-                                            <button class="btn btn-primary small" id="btn-export-data" style="flex:1; justify-content:center;">
-                                                <i class="ph ph-download-simple"></i> Sao lưu (Tải về)
+                                            <button class="btn btn-secondary small" id="btn-export-data" style="flex:1; justify-content:center;">
+                                                <i class="ph ph-download-simple"></i> Sao lưu
                                             </button>
-                                            <button class="btn btn-secondary small" id="btn-import-data" style="flex:1; justify-content:center; background: rgba(255,255,255,0.1);">
-                                                <i class="ph ph-upload-simple"></i> Khôi phục (Mở file)
+                                            <button class="btn btn-secondary small" id="btn-import-data" style="flex:1; justify-content:center;">
+                                                <i class="ph ph-upload-simple"></i> Khôi phục
                                             </button>
                                             <input type="file" id="file-import" style="display:none;" accept=".json">
                                         </div>
@@ -414,6 +429,6 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
