@@ -164,14 +164,34 @@ const els = {
     btnImportData: document.getElementById('btn-import-data'),
     fileImport: document.getElementById('file-import'),
     
+    // Summary Labels & Cards
+    totalIncome: document.getElementById('total-income'),
+    totalExpense: document.getElementById('total-expense'),
+    totalBalanceCurrent: document.getElementById('total-balance-current'),
+    savingsPrevious: document.getElementById('savings-previous'),
+    labelIncomeMonth: document.getElementById('label-income-month'),
+    labelExpenseMonth: document.getElementById('label-expense-month'),
+    labelBalanceMonth: document.getElementById('label-balance-month'),
+    
     // Sidebar Mobile
     sidebar: document.getElementById('sidebar'),
     btnToggleSidebar: document.getElementById('btn-toggle-sidebar'),
     btnCloseSidebar: document.getElementById('btn-close-sidebar'),
     
+    // Report Filters
+    reportYear: document.getElementById('report-year'),
+    reportMonth: document.getElementById('report-month'),
+    reportCategory: document.getElementById('report-category'),
+    reportSavingsTotal: document.getElementById('report-savings-total'),
+    
     // Budgets
     budgetProgressContainer: document.getElementById('budget-progress-container'),
     budgetSettingsContainer: document.getElementById('budget-settings-container'),
+    
+    // User Profile
+    userAvatar: document.getElementById('user-avatar'),
+    avatarUrlInput: document.getElementById('avatar-url-input'),
+    btnSaveAvatar: document.getElementById('btn-save-avatar'),
     
     // Filters
     filterType: document.getElementById('filter-type'),
@@ -221,6 +241,16 @@ const init = async () => {
     
     // Init settings
     renderSettings();
+    renderUserAvatar();
+};
+
+const renderUserAvatar = () => {
+    if (els.userAvatar) {
+        els.userAvatar.src = state.userAvatar || 'https://i.pravatar.cc/150?img=11';
+    }
+    if (els.avatarUrlInput) {
+        els.avatarUrlInput.value = state.userAvatar || '';
+    }
 };
 
 // --- Event Listeners ---
@@ -249,10 +279,26 @@ const setupEventListeners = () => {
     els.btnCloseModal.addEventListener('click', closeModal);
     els.btnCancelModal.addEventListener('click', closeModal);
     
+    if (els.reportYear) els.reportYear.addEventListener('change', renderCharts);
+    if (els.reportMonth) els.reportMonth.addEventListener('change', renderCharts);
+    if (els.reportCategory) els.reportCategory.addEventListener('change', renderCharts);
+
     // Sidebar Toggle
     if (els.btnToggleSidebar) {
         els.btnToggleSidebar.addEventListener('click', () => {
             els.sidebar.classList.add('active');
+        });
+    }
+
+    if (els.btnSaveAvatar) {
+        els.btnSaveAvatar.addEventListener('click', () => {
+            const url = els.avatarUrlInput.value.trim();
+            if (url) {
+                state.userAvatar = url;
+                saveData();
+                renderUserAvatar();
+                alert('Đã cập nhật ảnh đại diện!');
+            }
         });
     }
     if (els.btnCloseSidebar) {
@@ -593,14 +639,22 @@ const switchTab = (tabId) => {
 
 // --- Form Logic ---
 const populateDateFilters = () => {
-    if(els.filterYear) {
+    if(els.filterYear || els.reportYear) {
         const currentYear = new Date().getFullYear();
-        for(let y = 2024; y <= currentYear + 2; y++) {
-            const opt = document.createElement('option');
-            opt.value = y;
-            opt.textContent = `Năm ${y}`;
-            els.filterYear.appendChild(opt);
-        }
+        const years = [];
+        for(let y = 2024; y <= currentYear + 2; y++) years.push(y);
+        
+        [els.filterYear, els.reportYear].forEach(select => {
+            if(!select) return;
+            const originalVal = select.id === 'filter-year' ? 'Năm: Tất cả' : 'Tất cả các năm';
+            select.innerHTML = `<option value="all">${originalVal}</option>`;
+            years.forEach(y => {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = `Năm ${y}`;
+                select.appendChild(opt);
+            });
+        });
     }
     if(els.filterDay) {
         for(let d = 1; d <= 31; d++) {
@@ -613,24 +667,43 @@ const populateDateFilters = () => {
 };
 
 const populateFilterCategories = () => {
-    if(!els.filterCategory) return;
-    const filterTypeValue = els.filterType.value;
-    els.filterCategory.innerHTML = '<option value="all">Danh mục: Tất cả</option>';
-    
-    const addOptions = (type) => {
-        state.categories[type].forEach(cat => {
-            const option = document.createElement('option');
-            option.value = cat.id;
-            option.textContent = `${cat.icon} ${cat.name}`;
-            els.filterCategory.appendChild(option);
-        });
-    };
+    // 1. Transaction Tab Filters
+    if(els.filterCategory) {
+        const filterTypeValue = els.filterType.value;
+        els.filterCategory.innerHTML = '<option value="all">Danh mục: Tất cả</option>';
+        
+        const addOptions = (type, target) => {
+            state.categories[type].forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = `${cat.icon} ${cat.name}`;
+                target.appendChild(option);
+            });
+        };
 
-    if (filterTypeValue === 'all') {
-        addOptions('expense');
-        addOptions('income');
-    } else {
-        addOptions(filterTypeValue);
+        if (filterTypeValue === 'all') {
+            addOptions('expense', els.filterCategory);
+            addOptions('income', els.filterCategory);
+        } else {
+            addOptions(filterTypeValue, els.filterCategory);
+        }
+    }
+
+    // 2. Report Tab Filters
+    if(els.reportCategory) {
+        els.reportCategory.innerHTML = '<option value="all">Tất cả danh mục</option>';
+        state.categories.expense.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat.id;
+            opt.textContent = `Chi: ${cat.icon} ${cat.name}`;
+            els.reportCategory.appendChild(opt);
+        });
+        state.categories.income.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat.id;
+            opt.textContent = `Thu: ${cat.icon} ${cat.name}`;
+            els.reportCategory.appendChild(opt);
+        });
     }
 };
 
@@ -674,84 +747,6 @@ const saveTransaction = () => {
     
     saveData();
     updateUI();
-};
-
-const editTransaction = (id) => {
-    const t = state.transactions.find(item => item.id === id);
-    if (!t) return;
-    
-    // Populate form
-    document.getElementById('trans-id').value = t.id;
-    els.amountInput.value = new Intl.NumberFormat('vi-VN').format(t.amount);
-    els.dateInput.value = t.date;
-    els.noteInput.value = t.note;
-    
-    // Check radio
-    const radio = document.querySelector(`input[name="type"][value="${t.type}"]`);
-    if(radio) radio.checked = true;
-    
-    // Populate categories based on type
-    populateCategories(t.type);
-    
-    // Select category
-    els.categorySelect.value = t.categoryId;
-    
-    // Change modal title
-    document.getElementById('modal-title').textContent = 'Chỉnh sửa giao dịch';
-    
-    // Open modal
-    els.modal.classList.add('active');
-};
-
-const deleteTransaction = (id) => {
-    if(confirm('Bạn có chắc chắn muốn xóa giao dịch này?')) {
-        state.transactions = state.transactions.filter(t => t.id !== id);
-        saveData();
-        updateUI();
-    }
-};
-
-// Expose to window for inline onclick handler
-window.deleteTransaction = deleteTransaction;
-window.editTransaction = editTransaction;
-
-window.deleteCategory = (id, type) => {
-    if(confirm('Bạn có chắc chắn muốn xóa hạng mục này? Các giao dịch cũ nếu đang dùng hạng mục này sẽ giữ nguyên nhưng hiển thị là "Khác".')) {
-        state.categories[type] = state.categories[type].filter(c => c.id !== id);
-        if (state.budgets && state.budgets[id] !== undefined) {
-             delete state.budgets[id];
-        }
-        saveData();
-        populateCategories(document.querySelector('input[name="type"]:checked').value);
-        renderSettings();
-        updateUI();
-    }
-};
-
-window.editCategory = (id, type) => {
-    const cat = state.categories[type].find(c => c.id === id);
-    if (!cat) return;
-    
-    // Check radio
-    const radio = document.querySelector(`input[name="cat_type"][value="${type}"]`);
-    if(radio) radio.checked = true;
-    
-    els.editCatIdInput.value = cat.id;
-    els.catIconInput.value = cat.icon;
-    els.catNameInput.value = cat.name;
-
-    if (type === 'expense' && state.budgets && state.budgets[id]) {
-        els.catBudgetInput.value = new Intl.NumberFormat('vi-VN').format(state.budgets[id]);
-    } else {
-        els.catBudgetInput.value = '';
-    }
-    
-    if (els.budgetInputGroup) {
-        els.budgetInputGroup.style.display = type === 'expense' ? 'block' : 'none';
-    }
-
-    els.catModalTitle.textContent = 'Chỉnh sửa hạng mục';
-    els.catModal.classList.add('active');
 };
 
 // --- Rendering View ---
@@ -859,19 +854,48 @@ const renderBudgetProgress = () => {
 };
 
 const calculateSummary = () => {
-    let income = 0;
-    let expense = 0;
+    let incomeMonthly = 0;
+    let expenseMonthly = 0;
+    let incomePrev = 0;
+    let expensePrev = 0;
+
+    const now = new Date();
+    const curMonth = now.getMonth();
+    const curYear = now.getFullYear();
+    const firstOfCurrentMonth = new Date(curYear, curMonth, 1);
 
     state.transactions.forEach(t => {
-        if (t.type === 'income') income += t.amount;
-        else if (t.type === 'expense') expense += t.amount;
+        const d = new Date(t.date);
+        const isThisMonth = d.getMonth() === curMonth && d.getFullYear() === curYear;
+
+        if (t.type === 'income') {
+            if (isThisMonth) incomeMonthly += t.amount;
+            if (d < firstOfCurrentMonth) incomePrev += t.amount;
+        } else if (t.type === 'expense') {
+            if (isThisMonth) expenseMonthly += t.amount;
+            if (d < firstOfCurrentMonth) expensePrev += t.amount;
+        }
     });
 
-    const balance = income - expense;
+    const savingsPrevious = incomePrev - expensePrev;
+    const balanceCurrent = incomeMonthly - expenseMonthly;
 
-    els.totalIncome.textContent = formatCurrency(income);
-    els.totalExpense.textContent = formatCurrency(expense);
-    els.totalBalance.textContent = formatCurrency(balance);
+    // Update labels with current month name
+    const monthNames = ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8", "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"];
+    const monthStr = monthNames[curMonth];
+    
+    if (els.labelIncomeMonth) els.labelIncomeMonth.textContent = `Thu nhập ${monthStr}`;
+    if (els.labelExpenseMonth) els.labelExpenseMonth.textContent = `Chi tiêu ${monthStr}`;
+    if (els.labelBalanceMonth) els.labelBalanceMonth.textContent = `Số dư ${monthStr}`;
+
+    if (els.totalIncome) els.totalIncome.textContent = formatCurrency(incomeMonthly);
+    if (els.totalExpense) els.totalExpense.textContent = formatCurrency(expenseMonthly);
+    if (els.savingsPrevious) els.savingsPrevious.textContent = formatCurrency(savingsPrevious);
+    if (els.totalBalanceCurrent) els.totalBalanceCurrent.textContent = formatCurrency(balanceCurrent);
+    
+    // Display household ID for confirmation in Sidebar
+    const displayId = document.getElementById('display-household-id');
+    if (displayId) displayId.textContent = householdId;
 };
 
 // Mini list in Dashboard
@@ -973,43 +997,74 @@ const renderFullTransactionsTable = () => {
 
 // --- Chart.js Integration ---
 const renderCharts = () => {
-    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.color = '#64748b';
     Chart.defaults.font.family = 'Inter';
 
-    const expenses = state.transactions.filter(t => t.type === 'expense');
+    const rYear = els.reportYear ? els.reportYear.value : 'all';
+    const rMonth = els.reportMonth ? els.reportMonth.value : 'all';
+    const rCat = els.reportCategory ? els.reportCategory.value : 'all';
 
-    // Setup Category Data for Doughnut Chart
+    // Data Filtering for Reports
+    const filteredTransactions = state.transactions.filter(t => {
+        const d = new Date(t.date);
+        const matchYear = rYear === 'all' || d.getFullYear() === parseInt(rYear);
+        const matchMonth = rMonth === 'all' || d.getMonth() === parseInt(rMonth);
+        const matchCat = rCat === 'all' || t.categoryId === rCat;
+        return matchYear && matchMonth && matchCat;
+    });
+
+    // Calculate report savings
+    let rInc = 0, rExp = 0;
+    filteredTransactions.forEach(t => {
+        if(t.type === 'income') rInc += t.amount;
+        else rExp += t.amount;
+    });
+    if(els.reportSavingsTotal) els.reportSavingsTotal.textContent = formatCurrency(rInc - rExp);
+
+    // Filtered Expenses for Doughnut
+    const expenses = filteredTransactions.filter(t => t.type === 'expense');
+
+    // Setup Category Data
     const expenseByCategory = {};
     expenses.forEach(t => {
-        const catName = getCategoryById('expense', t.categoryId).name;
-        if(expenseByCategory[catName]) {
-            expenseByCategory[catName] += t.amount;
-        } else {
-            expenseByCategory[catName] = t.amount;
-        }
+        const catObj = getCategoryById('expense', t.categoryId);
+        const catName = catObj.name;
+        expenseByCategory[catName] = (expenseByCategory[catName] || 0) + t.amount;
     });
 
     const categories = Object.keys(expenseByCategory);
     const amounts = Object.values(expenseByCategory);
     
-    // Colors
-    const palette = ['#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6'];
+    // Pastel Green Palette
+    const palette = ['#a7f3d0', '#6ee7b7', '#34d399', '#10b981', '#059669', '#065f46', '#064e3b', '#bbf7d0'];
 
-    // Destroy existing charts to prevent canvas reuse error
+    // Destroy existing charts
     if(charts.miniExpense) charts.miniExpense.destroy();
     if(charts.expenseCategory) charts.expenseCategory.destroy();
     if(charts.cashflow) charts.cashflow.destroy();
 
-    // 1. Mini Expense Chart (Dashboard)
+    // 1. Mini Expense Chart (Dashboard - Always current month)
     const ctx1 = document.getElementById('miniExpenseChart');
     if(ctx1) {
+        // For dashboard, we use current month always
+        const now = new Date();
+        const d_expenses = state.transactions.filter(t => {
+            const d = new Date(t.date);
+            return t.type === 'expense' && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        });
+        const d_catData = {};
+        d_expenses.forEach(t => {
+            const n = getCategoryById('expense', t.categoryId).name;
+            d_catData[n] = (d_catData[n] || 0) + t.amount;
+        });
+
         charts.miniExpense = new Chart(ctx1, {
             type: 'doughnut',
             data: {
-                labels: categories.length > 0 ? categories : ['Chưa có dữ liệu'],
+                labels: Object.keys(d_catData).length > 0 ? Object.keys(d_catData) : ['Chưa có dữ liệu'],
                 datasets: [{
-                    data: categories.length > 0 ? amounts : [1],
-                    backgroundColor: categories.length > 0 ? palette : ['#1e293b'],
+                    data: Object.keys(d_catData).length > 0 ? Object.values(d_catData) : [1],
+                    backgroundColor: Object.keys(d_catData).length > 0 ? palette : ['#f1f5f9'],
                     borderWidth: 0,
                 }]
             },
@@ -1024,18 +1079,18 @@ const renderCharts = () => {
         });
     }
 
-    // 2. Full Expense Category Chart (Reports)
+    // 2. Full Expense Category Chart (Reports - Filtered)
     const ctx2 = document.getElementById('expenseCategoryChart');
     if(ctx2) {
         charts.expenseCategory = new Chart(ctx2, {
             type: 'pie',
             data: {
-                labels: categories.length > 0 ? categories : ['Chưa có dữ liệu'],
+                labels: categories.length > 0 ? categories : ['Không có dữ liệu'],
                 datasets: [{
                     data: categories.length > 0 ? amounts : [1],
-                    backgroundColor: categories.length > 0 ? palette : ['#1e293b'],
+                    backgroundColor: categories.length > 0 ? palette : ['#f1f5f9'],
                     borderWidth: 1,
-                    borderColor: '#0b0f19'
+                    borderColor: '#fff'
                 }]
             },
             options: {
@@ -1048,31 +1103,24 @@ const renderCharts = () => {
         });
     }
 
-    // 3. Cashflow Chart (Income vs Expense)
+    // 3. Cashflow Chart (Income vs Expense - Filtered)
     const ctx3 = document.getElementById('cashflowChart');
     if (ctx3) {
-        let incTotal = 0;
-        let expTotal = 0;
-        state.transactions.forEach(t => {
-            if(t.type === 'income') incTotal += t.amount;
-            else expTotal += t.amount;
-        });
-
         charts.cashflow = new Chart(ctx3, {
             type: 'bar',
             data: {
-                labels: ['Tháng hiện tại'],
+                labels: ['Kết quả lọc'],
                 datasets: [
                     {
                         label: 'Thu nhập',
-                        data: [incTotal],
-                        backgroundColor: '#10b981',
+                        data: [rInc],
+                        backgroundColor: '#6ee7b7', // Pastel green light
                         borderRadius: 6
                     },
                     {
                         label: 'Chi tiêu',
-                        data: [expTotal],
-                        backgroundColor: '#ef4444',
+                        data: [rExp],
+                        backgroundColor: '#f87171', // Keep expense red but a bit softer
                         borderRadius: 6
                     }
                 ]
@@ -1083,7 +1131,7 @@ const renderCharts = () => {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
                     },
                     x: {
                         grid: { display: false }

@@ -49,6 +49,11 @@
                     <i class="ph ph-plus"></i> Thêm Giao Dịch
                 </button>
             </div>
+            
+            <div style="margin-top: auto; padding: 16px; border-top: 1px solid var(--card-border);">
+                <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">MÃ ĐỒNG BỘ</div>
+                <div id="display-household-id" style="font-size: 13px; font-weight: 600; color: var(--primary); font-family: monospace;">family_khoi789</div>
+            </div>
         </aside>
 
         <!-- Main Content -->
@@ -73,29 +78,27 @@
             </header>
 
             <!-- Dashboard Tab -->
-            <div class="tab-content active" id="tab-dashboard">
-                <!-- Summary Cards -->
+            <div id="tab-dashboard" class="tab-content active">
                 <div class="summary-cards">
-                    <div class="card glass-panel gradient-card">
-                        <div class="card-icon"><i class="ph ph-bank"></i></div>
-                        <div class="card-info">
-                            <span class="card-label">Tổng Số Dư</span>
-                            <h2 class="card-amount" id="total-balance">0đ</h2>
-                        </div>
+                    <div class="card glass-panel balance-card" style="border-left: 4px solid var(--success);">
+                        <div class="card-icon" style="color: var(--success); background: var(--success-bg);"><i class="ph ph-coins"></i></div>
+                        <span class="card-label" id="label-balance-month">Số dư Tháng 4</span>
+                        <div class="card-amount" id="total-balance-current" style="color: var(--success);">0 ₫</div>
                     </div>
                     <div class="card glass-panel income-card">
                         <div class="card-icon"><i class="ph ph-trend-up"></i></div>
-                        <div class="card-info">
-                            <span class="card-label">Tổng Thu</span>
-                            <h2 class="card-amount success-text" id="total-income">0đ</h2>
-                        </div>
+                        <span class="card-label" id="label-income-month">Thu nhập Tháng 4</span>
+                        <div class="card-amount success-text" id="total-income">0 ₫</div>
                     </div>
                     <div class="card glass-panel expense-card">
                         <div class="card-icon"><i class="ph ph-trend-down"></i></div>
-                        <div class="card-info">
-                            <span class="card-label">Tổng Chi</span>
-                            <h2 class="card-amount danger-text" id="total-expense">0đ</h2>
-                        </div>
+                        <span class="card-label" id="label-expense-month">Chi tiêu Tháng 4</span>
+                        <div class="card-amount danger-text" id="total-expense">0 ₫</div>
+                    </div>
+                    <div class="card glass-panel savings-card" style="border-left: 4px solid var(--primary);">
+                        <div class="card-icon" style="color: var(--primary); background: var(--primary-light);"><i class="ph ph-piggy-bank"></i></div>
+                        <span class="card-label">Tích lũy</span>
+                        <div class="card-amount" id="savings-previous">0 ₫</div>
                     </div>
                 </div>
 
@@ -138,42 +141,30 @@
             <!-- Transactions Tab -->
             <div class="tab-content" id="tab-transactions">
                 <div class="card glass-panel full-height">
-                    <div class="card-header flex-center" style="flex-wrap:wrap; gap:16px;">
-                        <h3>Lịch sử giao dịch</h3>
-                        <div class="actions-group" style="display:flex; flex-wrap:wrap; gap:8px;">
-                            <select id="filter-year" class="glass-input small">
+                    <div class="card-header" style="flex-wrap:wrap; gap:16px;">
+                        <div class="filter-toolbar" style="display:flex; flex-wrap:wrap; gap:10px; width:100%; align-items:center;">
+                            <select id="filter-year" class="glass-input small" style="width:auto; min-width:110px;">
                                 <option value="all">Năm: Tất cả</option>
-                                <!-- JS populate -->
                             </select>
-                            <select id="filter-month" class="glass-input small">
+                            <select id="filter-month" class="glass-input small" style="width:auto; min-width:110px;">
                                 <option value="all">Tháng: Tất cả</option>
-                                <option value="1">Tháng 1</option>
-                                <option value="2">Tháng 2</option>
-                                <option value="3">Tháng 3</option>
-                                <option value="4">Tháng 4</option>
-                                <option value="5">Tháng 5</option>
-                                <option value="6">Tháng 6</option>
-                                <option value="7">Tháng 7</option>
-                                <option value="8">Tháng 8</option>
-                                <option value="9">Tháng 9</option>
-                                <option value="10">Tháng 10</option>
-                                <option value="11">Tháng 11</option>
-                                <option value="12">Tháng 12</option>
+                                <option value="1">Tháng 1</option><option value="2">Tháng 2</option><option value="3">Tháng 3</option>
+                                <option value="4">Tháng 4</option><option value="5">Tháng 5</option><option value="6">Tháng 6</option>
+                                <option value="7">Tháng 7</option><option value="8">Tháng 8</option><option value="9">Tháng 9</option>
+                                <option value="10">Tháng 10</option><option value="11">Tháng 11</option><option value="12">Tháng 12</option>
                             </select>
-                            <select id="filter-day" class="glass-input small">
+                            <select id="filter-day" class="glass-input small" style="width:auto; min-width:110px;">
                                 <option value="all">Ngày: Tất cả</option>
-                                <!-- JS populate 1->31 -->
                             </select>
-                            <select id="filter-type" class="glass-input small">
+                            <select id="filter-type" class="glass-input small" style="width:auto; min-width:110px;">
                                 <option value="all">Loại: Tất cả</option>
                                 <option value="income">Chỉ Thu</option>
                                 <option value="expense">Chỉ Chi</option>
                             </select>
-                            <select id="filter-category" class="glass-input small">
+                            <select id="filter-category" class="glass-input small" style="width:auto; min-width:130px;">
                                 <option value="all">Danh mục: Tất cả</option>
-                                <!-- Rendered by JS -->
                             </select>
-                            <button class="btn btn-primary small" id="btn-add-transaction-page">
+                            <button class="btn btn-primary small" id="btn-add-transaction-page" style="margin-left: auto;">
                                 <i class="ph ph-plus"></i> Thêm mới
                             </button>
                         </div>
@@ -199,6 +190,29 @@
 
             <!-- Reports Tab -->
             <div class="tab-content" id="tab-reports">
+                <div class="card glass-panel" style="margin-bottom: 24px; padding: 15px;">
+                    <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center;">
+                        <span style="font-weight: 600; color:var(--text-main);"><i class="ph ph-funnel"></i> Lọc báo cáo:</span>
+                        <select id="report-year" class="glass-input small" style="width:auto; min-width:110px;"></select>
+                        <select id="report-month" class="glass-input small" style="width:auto; min-width:110px;">
+                            <option value="all">Cả năm</option>
+                            <option value="0">Tháng 1</option><option value="1">Tháng 2</option><option value="2">Tháng 3</option>
+                            <option value="3">Tháng 4</option><option value="4">Tháng 5</option><option value="5">Tháng 6</option>
+                            <option value="6">Tháng 7</option><option value="7">Tháng 8</option><option value="8">Tháng 9</option>
+                            <option value="9">Tháng 10</option><option value="10">Tháng 11</option><option value="11">Tháng 12</option>
+                        </select>
+                        <select id="report-category" class="glass-input small" style="width:auto; min-width:150px;">
+                            <option value="all">Tất cả danh mục</option>
+                        </select>
+                        <div style="margin-left:auto; display:flex; gap:8px;">
+                            <div class="card glass-panel small" style="background: var(--success-bg); border-color: var(--success); padding: 8px 16px; margin:0;">
+                                <span style="font-size:12px; color:var(--success);">Tích lũy theo lọc:</span>
+                                <strong id="report-savings-total" style="display:block; color:var(--success);">0 ₫</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="dashboard-grid h-full">
                     <div class="card glass-panel col-span-2">
                         <div class="card-header">
@@ -223,13 +237,26 @@
             <div class="tab-content" id="tab-settings">
                 <div class="dashboard-grid h-full">
                     <div class="card glass-panel col-span-1">
-                        <div class="card-header flex-center">
+                        <div class="card-header">
+                            <h3>Cài đặt cá nhân</h3>
+                        </div>
+                        <div class="settings-content">
+                            <div class="form-group">
+                                <label><i class="ph ph-image"></i> Link ảnh đại diện (URL)</label>
+                                <div style="display:flex; gap:8px;">
+                                    <input type="text" id="avatar-url-input" class="glass-input" placeholder="Dán link ảnh tại đây...">
+                                    <button class="btn btn-primary small" id="btn-save-avatar">Lưu</button>
+                                </div>
+                                <p style="font-size:12px; color:var(--text-muted); margin-top:8px;">Gợi ý: Bạn có thể lấy link ảnh từ Facebook hoặc Google.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="card-header flex-center" style="margin-top:24px;">
                             <h3>Hạn mức (Hàng tháng)</h3>
                             <button class="btn btn-secondary small" id="btn-open-category-modal">+ Thêm hạng mục</button>
                         </div>
                         <div class="settings-content" id="budget-settings-container">
                             <!-- Input lists for each category generated by JS -->
-                        </div>
                         </div>
                     </div>
                     
