@@ -160,6 +160,7 @@
                                 <option value="all">Loại: Tất cả</option>
                                 <option value="income">Chỉ Thu</option>
                                 <option value="expense">Chỉ Chi</option>
+                                <option value="debt">Chỉ Vay/Nợ</option>
                             </select>
                             <select id="filter-category" class="glass-input small" style="width:auto; min-width:130px;">
                                 <option value="all">Danh mục: Tất cả</option>
@@ -222,9 +223,17 @@
                             <canvas id="cashflowChart"></canvas>
                         </div>
                     </div>
-                    <div class="card glass-panel col-span-1">
+                    <div class="card glass-panel col-span-2" style="grid-column: span 2;">
                         <div class="card-header">
-                            <h3>Phân bổ chi tiêu</h3>
+                            <h3>Xu hướng Thu / Chi <span style="font-size: 13px; font-weight: normal; color: var(--text-muted);">(Biểu đồ biến động)</span></h3>
+                        </div>
+                        <div class="chart-container" style="height: 350px;">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card glass-panel col-span-2">
+                        <div class="card-header">
+                            <h3>Phân bổ chi tiêu <span id="expense-cat-title" style="font-size: 13px; font-weight: normal; color: var(--text-muted);"></span></h3>
                         </div>
                         <div class="chart-container">
                             <canvas id="expenseCategoryChart"></canvas>
@@ -345,6 +354,10 @@
                             <input type="radio" name="type" value="income">
                             <span class="radio-box income-box"><i class="ph ph-trend-up"></i> Thu nhập</span>
                         </label>
+                        <label class="radio-label">
+                            <input type="radio" name="type" value="debt">
+                            <span class="radio-box debt-box"><i class="ph ph-hand-coins"></i> Vay/Nợ</span>
+                        </label>
                     </div>
 
                     <div class="form-group">
@@ -409,6 +422,10 @@
                         <label class="radio-label">
                             <input type="radio" name="cat_type" value="income">
                             <span class="radio-box income-box"><i class="ph ph-trend-up"></i> Khoản Thu</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="cat_type" value="debt">
+                            <span class="radio-box debt-box"><i class="ph ph-hand-coins"></i> Vay/Nợ</span>
                         </label>
                     </div>
 

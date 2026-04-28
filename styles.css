@@ -1,25 +1,29 @@
 :root {
-    --bg-color: #f8fafc;
-    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    --card-bg: rgba(255, 255, 255, 0.7);
-    --card-border: rgba(0, 0, 0, 0.05);
+    /* New Mint & Teal Palette from reference */
+    --primary: #0d9488;
+    --primary-hover: #0f766e;
+    --primary-light: rgba(13, 148, 136, 0.1);
+    
+    --bg-color: #ffffff;
+    --bg-gradient: #ffffff;
+    --card-bg: rgba(255, 255, 255, 0.4);
+    --card-border: rgba(255, 255, 255, 0.8);
     --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
     
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
-    --primary-light: rgba(99, 102, 241, 0.1);
+    --success: #10b981;
+    --success-bg: rgba(16, 185, 129, 0.1);
     
-    --success: #059669;
-    --success-bg: rgba(5, 150, 105, 0.1);
+    --danger: #f43f5e;
+    --danger-bg: rgba(244, 63, 94, 0.1);
     
-    --danger: #dc2626;
-    --danger-bg: rgba(220, 38, 38, 0.1);
-    
-    --text-main: #1e293b;
+    --text-main: #0f172a;
     --text-muted: #64748b;
     
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Inter', sans-serif;
+
+    --positive: #3b82f6; /* Blue for Income */
+    --negative: #ef4444; /* Red for Expense */
 }
 
 * {
@@ -30,7 +34,8 @@
 
 body {
     font-family: var(--font-body);
-    background: var(--bg-gradient);
+    background-color: var(--bg-color);
+    background-image: none;
     color: var(--text-main);
     min-height: 100vh;
     overflow-x: hidden;
@@ -43,12 +48,12 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Glassmorphism Utilities */
 .glass-panel {
-    background: var(--card-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--card-border);
-    border-radius: 16px;
-    box-shadow: var(--glass-shadow);
+    background: var(--card-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--card-border) !important;
+    border-radius: 20px;
+    box-shadow: var(--glass-shadow) !important;
 }
 
 /* Layout */
@@ -64,7 +69,12 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     flex-direction: column;
     padding: 24px;
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--card-border);
     border-radius: 20px;
+    box-shadow: var(--glass-shadow);
     z-index: 10;
 }
 
@@ -118,7 +128,7 @@ h1, h2, h3, h4, h5, h6 {
 .nav-item.active {
     background: var(--primary);
     color: white;
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 10px 15px -3px rgba(13, 148, 136, 0.3);
 }
 
 /* Main Content */
@@ -541,6 +551,12 @@ input:checked + .income-box {
     color: var(--success);
 }
 
+input:checked + .debt-box {
+    background: rgba(59, 130, 246, 0.1); /* Light Blue */
+    border-color: #3b82f6;
+    color: #3b82f6;
+}
+
 .form-actions {
     display: flex;
     gap: 16px;
@@ -571,7 +587,7 @@ input:checked + .income-box {
     width: 100%;
 }
 .chart-container-mini {
-    height: 200px;
+    height: 350px;
     width: 100%;
 }
 
@@ -590,6 +606,13 @@ input:checked + .income-box {
 }
 .edit-btn:hover {
     color: var(--primary);
+}
+
+.positive-text {
+    color: var(--positive) !important;
+}
+.negative-text {
+    color: var(--negative) !important;
 }
 
 /* Emojis */
@@ -743,4 +766,30 @@ input:checked + .income-box {
     .transactions-table {
         min-width: 450px; /* Force minimum width to trigger scroll on narrow screens */
     }
+}
+
+/* Budget Progress Enhancements */
+.progress-bg {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.05); /* Light gray for contrast on white bg */
+    height: 10px;
+    border-radius: 50px;
+    overflow: hidden;
+    margin-top: 8px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); /* Soft inner depth */
+}
+.progress-fill {
+    height: 10px;
+    border-radius: 50px;
+    background: #6ee7b7; /* Spring Mint */
+    transition: width 0.3s ease;
+}
+.progress-fill.safe {
+    background: #10b981; /* Vibrant Emerald */
+}
+.progress-fill.warning {
+    background: #f59e0b !important; /* Bold Amber */
+}
+.progress-fill.danger {
+    background: #ef4444 !important; /* Bold Red */
 }

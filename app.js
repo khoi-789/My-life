@@ -38,7 +38,21 @@ const DEFAULT_CATEGORIES = {
         { id: 'exp_entertain', name: 'Giải trí', icon: '🎮' },
         { id: 'exp_family', name: 'Gia đình', icon: '🏠' },
         { id: 'exp_other', name: 'Chi tiêu khác', icon: '💸' }
+    ],
+    debt: [
+        { id: 'debt_loan', name: 'Cho vay', icon: '📤' },
+        { id: 'debt_borrow', name: 'Đi vay', icon: '📥' },
+        { id: 'debt_recover', name: 'Thu nợ', icon: '💰' },
+        { id: 'debt_repay', name: 'Trả nợ', icon: '💸' }
     ]
+};
+
+const isTransactionPositive = (t) => {
+    if (t.type === 'income') return true;
+    if (t.type === 'debt') {
+        return (t.categoryId === 'debt_borrow' || t.categoryId === 'debt_recover');
+    }
+    return false;
 };
 
 // --- State Management ---
@@ -81,6 +95,12 @@ const loadData = async () => {
         state = JSON.parse(localData);
         if (!state.budgets) state.budgets = {};
         if (!state.categories) state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+        if (!state.categories.debt) state.categories.debt = [...DEFAULT_CATEGORIES.debt]; 
+        // Force update icons for debt if they are the old ones
+        state.categories.debt.forEach(c => {
+            const def = DEFAULT_CATEGORIES.debt.find(d => d.id === c.id);
+            if (def) c.icon = def.icon;
+        });
         updateUI();
     }
 
@@ -91,6 +111,8 @@ const loadData = async () => {
             const cloudData = docSnap.data();
             // Merge or replace (here we replace with cloud since it's the source of truth)
             state = cloudData;
+            if (!state.categories) state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+            if (!state.categories.debt) state.categories.debt = [...DEFAULT_CATEGORIES.debt];
             saveDataLocal();
             updateUI();
         } else {
@@ -113,6 +135,8 @@ const loadData = async () => {
             // Check if there are changes to avoid infinite UI loops
             if (JSON.stringify(data) !== JSON.stringify(state)) {
                 state = data;
+                if (!state.categories) state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+                if (!state.categories.debt) state.categories.debt = [...DEFAULT_CATEGORIES.debt];
                 saveDataLocal();
                 updateUI();
             }
@@ -218,8 +242,27 @@ const els = {
 let charts = {
     miniExpense: null,
     cashflow: null,
+    trend: null,
     expenseCategory: null
 };
+
+// --- Custom Chart Plugins ---
+const centerTextPlugin = {
+    id: 'centerText',
+    afterDraw: (chart) => {
+        if (chart.config.type === 'doughnut' && chart.options.plugins.centerText) {
+            const { ctx, chartArea: { top, bottom, left, right, width, height } } = chart;
+            ctx.save();
+            ctx.font = 'bold 20px Outfit';
+            ctx.fillStyle = '#0f172a';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(chart.options.plugins.centerText, left + width / 2, top + height / 2);
+            ctx.restore();
+        }
+    }
+};
+Chart.register(centerTextPlugin);
 
 // --- Initialization ---
 const init = async () => {
@@ -624,6 +667,9 @@ const switchTab = (tabId) => {
         pageTitle.textContent = titles[tabId];
     }
 
+    // Set universal theme class
+    document.body.className = `antigravity-theme`;
+
     // Auto-close sidebar on mobile
     if (window.innerWidth <= 768 && els.sidebar) {
         els.sidebar.classList.remove('active');
@@ -640,9 +686,8 @@ const switchTab = (tabId) => {
 // --- Form Logic ---
 const populateDateFilters = () => {
     if(els.filterYear || els.reportYear) {
-        const currentYear = new Date().getFullYear();
         const years = [];
-        for(let y = 2024; y <= currentYear + 2; y++) years.push(y);
+        for(let y = 2020; y <= 2035; y++) years.push(y);
         
         [els.filterYear, els.reportYear].forEach(select => {
             if(!select) return;
@@ -652,6 +697,7 @@ const populateDateFilters = () => {
                 const opt = document.createElement('option');
                 opt.value = y;
                 opt.textContent = `Năm ${y}`;
+                if (y === new Date().getFullYear()) opt.selected = true;
                 select.appendChild(opt);
             });
         });
@@ -702,6 +748,12 @@ const populateFilterCategories = () => {
             const opt = document.createElement('option');
             opt.value = cat.id;
             opt.textContent = `Thu: ${cat.icon} ${cat.name}`;
+            els.reportCategory.appendChild(opt);
+        });
+        state.categories.debt.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat.id;
+            opt.textContent = `Nợ: ${cat.icon} ${cat.name}`;
             els.reportCategory.appendChild(opt);
         });
     }
@@ -874,6 +926,16 @@ const calculateSummary = () => {
         } else if (t.type === 'expense') {
             if (isThisMonth) expenseMonthly += t.amount;
             if (d < firstOfCurrentMonth) expensePrev += t.amount;
+        } else if (t.type === 'debt') {
+            // Cho vay (loan) & Trả nợ (repay) -> Tiền ra (giống Chi tiêu)
+            // Đi vay (borrow) & Thu nợ (recover) -> Tiền vào (giống Thu nhập)
+            if (t.categoryId === 'debt_loan' || t.categoryId === 'debt_repay') {
+                if (isThisMonth) expenseMonthly += t.amount;
+                if (d < firstOfCurrentMonth) expensePrev += t.amount;
+            } else {
+                if (isThisMonth) incomeMonthly += t.amount;
+                if (d < firstOfCurrentMonth) incomePrev += t.amount;
+            }
         }
     });
 
@@ -923,8 +985,8 @@ const renderRecentTransactions = () => {
                     </div>
                 </div>
                 <div class="trans-right">
-                    <div class="trans-amount ${t.type === 'income' ? 'success-text' : ''}">
-                        ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+                    <div class="trans-amount ${isTransactionPositive(t) ? 'positive-text' : 'negative-text'}">
+                        ${isTransactionPositive(t) ? '+' : '-'}${formatCurrency(t.amount)}
                     </div>
                     <div class="trans-date">${formatDate(t.date)}</div>
                 </div>
@@ -970,8 +1032,8 @@ const renderFullTransactionsTable = () => {
 
     filteredList.forEach(t => {
         const cat = getCategoryById(t.type, t.categoryId);
-        const amountClass = t.type === 'income' ? 'success-text' : '';
-        const operator = t.type === 'income' ? '+' : '-';
+        const amountClass = isTransactionPositive(t) ? 'positive-text' : 'negative-text';
+        const operator = isTransactionPositive(t) ? '+' : '-';
         
         const html = `
             <tr>
@@ -997,7 +1059,8 @@ const renderFullTransactionsTable = () => {
 
 // --- Chart.js Integration ---
 const renderCharts = () => {
-    Chart.defaults.color = '#64748b';
+    Chart.defaults.color = '#0f172a';
+    Chart.defaults.borderColor = 'rgba(0, 0, 0, 0.05)';
     Chart.defaults.font.family = 'Inter';
 
     const rYear = els.reportYear ? els.reportYear.value : 'all';
@@ -1016,64 +1079,172 @@ const renderCharts = () => {
     // Calculate report savings
     let rInc = 0, rExp = 0;
     filteredTransactions.forEach(t => {
-        if(t.type === 'income') rInc += t.amount;
-        else rExp += t.amount;
+        if (t.type === 'income') rInc += t.amount;
+        else if (t.type === 'expense') rExp += t.amount;
+        else if (t.type === 'debt') {
+            if (t.categoryId === 'debt_loan' || t.categoryId === 'debt_repay') rExp += t.amount;
+            else rInc += t.amount;
+        }
     });
     if(els.reportSavingsTotal) els.reportSavingsTotal.textContent = formatCurrency(rInc - rExp);
 
-    // Filtered Expenses for Doughnut
-    const expenses = filteredTransactions.filter(t => t.type === 'expense');
+    // Filtered Expenses for Doughnut (Include Debt-related expenses)
+    const expenses = filteredTransactions.filter(t => {
+        const isDebtExp = (t.type === 'debt' && (t.categoryId === 'debt_loan' || t.categoryId === 'debt_repay'));
+        return t.type === 'expense' || isDebtExp;
+    });
 
     // Setup Category Data
     const expenseByCategory = {};
     expenses.forEach(t => {
-        const catObj = getCategoryById('expense', t.categoryId);
+        const catObj = getCategoryById(t.type, t.categoryId);
         const catName = catObj.name;
         expenseByCategory[catName] = (expenseByCategory[catName] || 0) + t.amount;
     });
 
     const categories = Object.keys(expenseByCategory);
     const amounts = Object.values(expenseByCategory);
+    const totalExpValue = amounts.reduce((a, b) => a + b, 0);
     
-    // Pastel Green Palette
-    const palette = ['#a7f3d0', '#6ee7b7', '#34d399', '#10b981', '#059669', '#065f46', '#064e3b', '#bbf7d0'];
+    // Vibrant & Diverse Palette for better identification
+    const palette = [
+        '#CB5A32', '#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', 
+        '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1',
+        '#14b8a6', '#f43f5e', '#fbbf24', '#22c55e'
+    ];
 
     // Destroy existing charts
     if(charts.miniExpense) charts.miniExpense.destroy();
     if(charts.expenseCategory) charts.expenseCategory.destroy();
     if(charts.cashflow) charts.cashflow.destroy();
+    if(charts.trend) charts.trend.destroy();
+
+    // Timeline Aggregation Logic
+    let timeLabels = [];
+    let incTimeData = [];
+    let expTimeData = [];
+
+    if (rMonth !== 'all') { // Daily grouping for specific month
+        const y = rYear !== 'all' ? parseInt(rYear) : new Date().getFullYear();
+        const m = parseInt(rMonth);
+        const daysInMonth = new Date(y, m + 1, 0).getDate();
+        for (let i = 1; i <= daysInMonth; i++) {
+            timeLabels.push(`Ngày ${i}/${m + 1}/${y}`);
+            incTimeData.push(0);
+            expTimeData.push(0);
+        }
+        filteredTransactions.forEach(t => {
+            const d = new Date(t.date);
+            const dayIdx = d.getDate() - 1;
+            if (t.type === 'income') incTimeData[dayIdx] += t.amount;
+            else if (t.type === 'expense') expTimeData[dayIdx] += t.amount;
+            else if (t.type === 'debt') {
+                if (t.categoryId === 'debt_loan' || t.categoryId === 'debt_repay') expTimeData[dayIdx] += t.amount;
+                else incTimeData[dayIdx] += t.amount;
+            }
+        });
+    } else { // Monthly grouping
+        if (rYear !== 'all') {
+            const y = parseInt(rYear);
+            for (let i = 1; i <= 12; i++) {
+                timeLabels.push(`T${i}/${y}`);
+                incTimeData.push(0);
+                expTimeData.push(0);
+            }
+            filteredTransactions.forEach(t => {
+                const d = new Date(t.date);
+                const monthIdx = d.getMonth();
+                if (t.type === 'income') incTimeData[monthIdx] += t.amount;
+                else if (t.type === 'expense') expTimeData[monthIdx] += t.amount;
+                else if (t.type === 'debt') {
+                    if (t.categoryId === 'debt_loan' || t.categoryId === 'debt_repay') expTimeData[monthIdx] += t.amount;
+                    else incTimeData[monthIdx] += t.amount;
+                }
+            });
+        } else {
+            // All years dynamically grouped by YYYY-MM
+            const grouped = {};
+            filteredTransactions.forEach(t => {
+                const d = new Date(t.date);
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                if (!grouped[key]) grouped[key] = { inc: 0, exp: 0 };
+                if (t.type === 'income') grouped[key].inc += t.amount;
+                else if (t.type === 'expense') grouped[key].exp += t.amount;
+                else if (t.type === 'debt') {
+                    if (t.categoryId === 'debt_loan' || t.categoryId === 'debt_repay') grouped[key].exp += t.amount;
+                    else grouped[key].inc += t.amount;
+                }
+            });
+            const sortedKeys = Object.keys(grouped).sort();
+            if (sortedKeys.length === 0) {
+                const d = new Date();
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                sortedKeys.push(key);
+                grouped[key] = { inc: 0, exp: 0 };
+            }
+            sortedKeys.forEach(k => {
+                const parts = k.split('-');
+                timeLabels.push(`T${parseInt(parts[1])}/${parts[0]}`);
+                incTimeData.push(grouped[k].inc);
+                expTimeData.push(grouped[k].exp);
+            });
+        }
+    }
+
+    // Dynamic Title for Expense Category Chart
+    let timeLabelStr = '';
+    if (rYear === 'all' && rMonth === 'all') timeLabelStr = '(Tất cả các năm)';
+    else if (rYear !== 'all' && rMonth === 'all') timeLabelStr = `(Năm ${rYear})`;
+    else if (rYear === 'all' && rMonth !== 'all') timeLabelStr = `(Tháng ${parseInt(rMonth)+1})`;
+    else timeLabelStr = `(T${parseInt(rMonth)+1}/${rYear})`;
+    
+    const expenseCatTitle = document.getElementById('expense-cat-title');
+    if (expenseCatTitle) expenseCatTitle.textContent = timeLabelStr;
 
     // 1. Mini Expense Chart (Dashboard - Always current month)
     const ctx1 = document.getElementById('miniExpenseChart');
     if(ctx1) {
-        // For dashboard, we use current month always
         const now = new Date();
         const d_expenses = state.transactions.filter(t => {
             const d = new Date(t.date);
-            return t.type === 'expense' && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            const isDebtExp = (t.type === 'debt' && (t.categoryId === 'debt_loan' || t.categoryId === 'debt_repay'));
+            return (t.type === 'expense' || isDebtExp) && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
         });
         const d_catData = {};
         d_expenses.forEach(t => {
-            const n = getCategoryById('expense', t.categoryId).name;
+            const n = getCategoryById(t.type, t.categoryId).name;
             d_catData[n] = (d_catData[n] || 0) + t.amount;
         });
+
+        const d_labels = Object.keys(d_catData);
+        const d_amounts = Object.values(d_catData);
+        const d_total = d_amounts.reduce((a, b) => a + b, 0);
 
         charts.miniExpense = new Chart(ctx1, {
             type: 'doughnut',
             data: {
-                labels: Object.keys(d_catData).length > 0 ? Object.keys(d_catData) : ['Chưa có dữ liệu'],
+                labels: d_labels.length > 0 ? d_labels : ['Chưa có dữ liệu'],
                 datasets: [{
-                    data: Object.keys(d_catData).length > 0 ? Object.values(d_catData) : [1],
-                    backgroundColor: Object.keys(d_catData).length > 0 ? palette : ['#f1f5f9'],
+                    data: d_amounts.length > 0 ? d_amounts : [1],
+                    backgroundColor: d_amounts.length > 0 ? palette : ['#f1f5f9'],
                     borderWidth: 0,
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '75%',
+                cutout: '55%',
                 plugins: {
-                    legend: { display: false }
+                    legend: { 
+                        display: true, 
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 10,
+                            font: { size: 11 }
+                        }
+                    },
+                    centerText: d_total > 0 ? formatCurrency(d_total) : '0 ₫'
                 }
             }
         });
@@ -1083,7 +1254,7 @@ const renderCharts = () => {
     const ctx2 = document.getElementById('expenseCategoryChart');
     if(ctx2) {
         charts.expenseCategory = new Chart(ctx2, {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels: categories.length > 0 ? categories : ['Không có dữ liệu'],
                 datasets: [{
@@ -1096,32 +1267,58 @@ const renderCharts = () => {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '55%',
                 plugins: {
-                    legend: { position: 'bottom' }
+                    legend: { position: 'bottom' },
+                    centerText: totalExpValue > 0 ? formatCurrency(totalExpValue) : '0 ₫',
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                        titleColor: '#0f172a',
+                        bodyColor: '#0f172a',
+                        borderColor: 'rgba(255, 255, 255, 0.6)',
+                        borderWidth: 1,
+                        padding: 12,
+                        boxPadding: 4,
+                        usePointStyle: true,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed !== null) {
+                                    label += new Intl.NumberFormat('vi-VN').format(context.parsed) + ' ₫';
+                                }
+                                return label;
+                            }
+                        }
+                    }
                 }
             }
         });
     }
 
-    // 3. Cashflow Chart (Income vs Expense - Filtered)
+    // 3. Cashflow Chart (Grouped Bar Chart - Filtered)
     const ctx3 = document.getElementById('cashflowChart');
     if (ctx3) {
         charts.cashflow = new Chart(ctx3, {
             type: 'bar',
             data: {
-                labels: ['Kết quả lọc'],
+                labels: timeLabels,
                 datasets: [
                     {
                         label: 'Thu nhập',
-                        data: [rInc],
-                        backgroundColor: '#6ee7b7', // Pastel green light
-                        borderRadius: 6
+                        data: incTimeData,
+                        backgroundColor: '#34d399', // Mint
+                        borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 },
+                        barPercentage: 0.8,
+                        categoryPercentage: 0.9
                     },
                     {
                         label: 'Chi tiêu',
-                        data: [rExp],
-                        backgroundColor: '#f87171', // Keep expense red but a bit softer
-                        borderRadius: 6
+                        data: expTimeData,
+                        backgroundColor: '#ffb3a7', // Pastel Peach/Orange
+                        borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 },
+                        barPercentage: 0.8,
+                        categoryPercentage: 0.9
                     }
                 ]
             },
@@ -1135,6 +1332,96 @@ const renderCharts = () => {
                     },
                     x: {
                         grid: { display: false }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                        titleColor: '#0f172a',
+                        bodyColor: '#0f172a',
+                        borderColor: 'rgba(255,255,255,0.5)',
+                        borderWidth: 1,
+                        padding: 10,
+                        boxPadding: 4,
+                        usePointStyle: true
+                    }
+                }
+            }
+        });
+    }
+
+    // 4. Trend Chart (Spline Area Chart - Filtered)
+    const ctx4 = document.getElementById('trendChart');
+    if (ctx4) {
+        charts.trend = new Chart(ctx4, {
+            type: 'line',
+            data: {
+                labels: timeLabels,
+                datasets: [
+                    {
+                        label: 'Thu nhập',
+                        data: incTimeData,
+                        borderColor: '#10b981', // Stronger Mint
+                        backgroundColor: 'rgba(16, 185, 129, 0.25)', // Transparent Mint fill
+                        fill: true,
+                        tension: 0.4, // Make it a spline curve
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#10b981'
+                    },
+                    {
+                        label: 'Chi tiêu',
+                        data: expTimeData,
+                        borderColor: '#f97316', // Stronger Peach
+                        backgroundColor: 'rgba(249, 115, 22, 0.25)', // Transparent Peach fill
+                        fill: true,
+                        tension: 0.4, // Make it a spline curve
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#f97316'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false, // Tooltip shows for all datasets at the vertical line
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    tooltip: { // Glassmorphism style tooltip
+                        backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                        titleColor: '#0f172a',
+                        bodyColor: '#0f172a',
+                        borderColor: 'rgba(255, 255, 255, 0.6)',
+                        borderWidth: 1,
+                        padding: 12,
+                        boxPadding: 6,
+                        usePointStyle: true,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('vi-VN').format(context.parsed.y) + ' ₫';
+                                }
+                                return label;
+                            }
+                        }
                     }
                 }
             }
