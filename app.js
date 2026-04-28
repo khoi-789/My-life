@@ -1130,7 +1130,7 @@ const renderCharts = () => {
         const m = parseInt(rMonth);
         const daysInMonth = new Date(y, m + 1, 0).getDate();
         for (let i = 1; i <= daysInMonth; i++) {
-            timeLabels.push(`Ngày ${i}/${m + 1}/${y}`);
+            timeLabels.push(`${i}`); // Just the day number
             incTimeData.push(0);
             expTimeData.push(0);
         }
@@ -1334,8 +1334,9 @@ const renderCharts = () => {
                     x: {
                         grid: { display: false },
                         ticks: {
-                            autoSkip: false,
-                            maxRotation: 45,
+                            autoSkip: timeLabels.length > 15,
+                            maxTicksLimit: 12,
+                            maxRotation: 0,
                             minRotation: 0,
                             font: { size: 10 }
                         }
@@ -1350,7 +1351,15 @@ const renderCharts = () => {
                         borderWidth: 1,
                         padding: 10,
                         boxPadding: 4,
-                        usePointStyle: true
+                        usePointStyle: true,
+                        callbacks: {
+                            title: function(context) {
+                                if (rMonth !== 'all') {
+                                    return `Ngày ${context[0].label}/${parseInt(rMonth)+1}/${rYear !== 'all' ? rYear : new Date().getFullYear()}`;
+                                }
+                                return context[0].label;
+                            }
+                        }
                     }
                 }
             }
@@ -1408,8 +1417,9 @@ const renderCharts = () => {
                     x: {
                         grid: { display: false },
                         ticks: {
-                            autoSkip: false,
-                            maxRotation: 45,
+                            autoSkip: timeLabels.length > 15,
+                            maxTicksLimit: 12,
+                            maxRotation: 0,
                             minRotation: 0,
                             font: { size: 10 }
                         }
@@ -1426,6 +1436,12 @@ const renderCharts = () => {
                         boxPadding: 6,
                         usePointStyle: true,
                         callbacks: {
+                            title: function(context) {
+                                if (rMonth !== 'all') {
+                                    return `Ngày ${context[0].label}/${parseInt(rMonth)+1}/${rYear !== 'all' ? rYear : new Date().getFullYear()}`;
+                                }
+                                return context[0].label;
+                            },
                             label: function(context) {
                                 let label = context.dataset.label || '';
                                 if (label) label += ': ';
