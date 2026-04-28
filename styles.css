@@ -764,7 +764,22 @@ input:checked + .debt-box {
     }
 
     .transactions-table {
-        min-width: 450px; /* Force minimum width to trigger scroll on narrow screens */
+        min-width: 450px; 
+    }
+
+    /* Compact Report Filters for Mobile */
+    .report-filters {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    .report-filters > * {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+    .report-filters .glass-input {
+        width: 100% !important;
     }
 }
 

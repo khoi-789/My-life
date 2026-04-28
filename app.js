@@ -253,7 +253,8 @@ const centerTextPlugin = {
         if (chart.config.type === 'doughnut' && chart.options.plugins.centerText) {
             const { ctx, chartArea: { top, bottom, left, right, width, height } } = chart;
             ctx.save();
-            ctx.font = 'bold 20px Outfit';
+            const fontSize = window.innerWidth < 768 ? '14px' : '20px';
+            ctx.font = `bold ${fontSize} Outfit`;
             ctx.fillStyle = '#0f172a';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -1331,7 +1332,13 @@ const renderCharts = () => {
                         grid: { color: 'rgba(0, 0, 0, 0.05)' }
                     },
                     x: {
-                        grid: { display: false }
+                        grid: { display: false },
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 45,
+                            minRotation: 0,
+                            font: { size: 10 }
+                        }
                     }
                 },
                 plugins: {
@@ -1399,7 +1406,13 @@ const renderCharts = () => {
                         grid: { color: 'rgba(0, 0, 0, 0.05)' }
                     },
                     x: {
-                        grid: { display: false }
+                        grid: { display: false },
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 45,
+                            minRotation: 0,
+                            font: { size: 10 }
+                        }
                     }
                 },
                 plugins: {
