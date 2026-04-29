@@ -731,6 +731,7 @@ const populateFilterCategories = () => {
         if (filterTypeValue === 'all') {
             addOptions('expense', els.filterCategory);
             addOptions('income', els.filterCategory);
+            addOptions('debt', els.filterCategory);
         } else {
             addOptions(filterTypeValue, els.filterCategory);
         }
@@ -749,6 +750,12 @@ const populateFilterCategories = () => {
             const opt = document.createElement('option');
             opt.value = cat.id;
             opt.textContent = `Thu: ${cat.icon} ${cat.name}`;
+            els.reportCategory.appendChild(opt);
+        });
+        state.categories.debt.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat.id;
+            opt.textContent = `Nợ: ${cat.icon} ${cat.name}`;
             els.reportCategory.appendChild(opt);
         });
         state.categories.debt.forEach(cat => {
