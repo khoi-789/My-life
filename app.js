@@ -759,7 +759,7 @@ const populateFilterCategories = () => {
             els.reportCategory.appendChild(opt);
         });
     }
-};
+}; // Updated filters logic for debt categories
 
 const populateCategories = (type) => {
     els.categorySelect.innerHTML = '';
