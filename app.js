@@ -758,12 +758,6 @@ const populateFilterCategories = () => {
             opt.textContent = `Nợ: ${cat.icon} ${cat.name}`;
             els.reportCategory.appendChild(opt);
         });
-        state.categories.debt.forEach(cat => {
-            const opt = document.createElement('option');
-            opt.value = cat.id;
-            opt.textContent = `Nợ: ${cat.icon} ${cat.name}`;
-            els.reportCategory.appendChild(opt);
-        });
     }
 };
 
