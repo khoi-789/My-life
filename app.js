@@ -1148,7 +1148,7 @@ const renderCharts = () => {
         if (rYear !== 'all') {
             const y = parseInt(rYear);
             for (let i = 1; i <= 12; i++) {
-                timeLabels.push(`T${i}/${y}`);
+                timeLabels.push(`T${i}`); // Just month number
                 incTimeData.push(0);
                 expTimeData.push(0);
             }
@@ -1357,6 +1357,9 @@ const renderCharts = () => {
                                 if (rMonth !== 'all') {
                                     return `Ngày ${context[0].label}/${parseInt(rMonth)+1}/${rYear !== 'all' ? rYear : new Date().getFullYear()}`;
                                 }
+                                if (rYear !== 'all') {
+                                    return `Tháng ${context[0].label.replace('T', '')}/${rYear}`;
+                                }
                                 return context[0].label;
                             }
                         }
@@ -1439,6 +1442,9 @@ const renderCharts = () => {
                             title: function(context) {
                                 if (rMonth !== 'all') {
                                     return `Ngày ${context[0].label}/${parseInt(rMonth)+1}/${rYear !== 'all' ? rYear : new Date().getFullYear()}`;
+                                }
+                                if (rYear !== 'all') {
+                                    return `Tháng ${context[0].label.replace('T', '')}/${rYear}`;
                                 }
                                 return context[0].label;
                             },
