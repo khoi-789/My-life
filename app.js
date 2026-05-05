@@ -181,6 +181,8 @@ const els = {
     amountInput: document.getElementById('trans-amount'),
     dateInput: document.getElementById('trans-date'),
     noteInput: document.getElementById('trans-note'),
+    btnAddSubItem: document.getElementById('btn-add-subitem'),
+    subItemsContainer: document.getElementById('subitems-container'),
     
     // Settings
     btnClearData: document.getElementById('btn-clear-data'),
@@ -246,6 +248,105 @@ let charts = {
     expenseCategory: null
 };
 
+// State for Sub-items in Add/Edit form
+let currentSubItems = [];
+
+const renderSubItemsForm = () => {
+    if (!els.subItemsContainer) return;
+    
+    if (currentSubItems.length === 0) {
+        els.subItemsContainer.style.display = 'none';
+        els.amountInput.readOnly = false;
+        els.amountInput.style.opacity = '1';
+        return;
+    }
+    
+    els.subItemsContainer.style.display = 'flex';
+    els.subItemsContainer.innerHTML = '';
+    
+    let totalAmount = 0;
+    
+    currentSubItems.forEach((sub, index) => {
+        totalAmount += Number(sub.amount || 0);
+        
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.gap = '8px';
+        row.style.alignItems = 'center';
+        
+        // Note Input
+        const noteInput = document.createElement('input');
+        noteInput.type = 'text';
+        noteInput.className = 'glass-input small';
+        noteInput.placeholder = 'Mô tả...';
+        noteInput.value = sub.note || '';
+        noteInput.style.flex = '2';
+        noteInput.addEventListener('input', (e) => {
+            currentSubItems[index].note = e.target.value;
+        });
+        
+        // Amount Input
+        const amountInput = document.createElement('input');
+        amountInput.type = 'text';
+        amountInput.className = 'glass-input small';
+        amountInput.placeholder = 'Số tiền';
+        amountInput.value = sub.amount ? new Intl.NumberFormat('vi-VN').format(sub.amount) : '';
+        amountInput.style.flex = '1';
+        amountInput.addEventListener('input', function(e) {
+            let val = this.value.replace(/\D/g, '');
+            currentSubItems[index].amount = val ? Number(val) : 0;
+            this.value = val ? new Intl.NumberFormat('vi-VN').format(val) : '';
+            updateParentAmount();
+        });
+        
+        // Category Select
+        const catSelect = document.createElement('select');
+        catSelect.className = 'glass-input small';
+        catSelect.style.flex = '1.5';
+        
+        const currentType = document.querySelector('input[name="type"]:checked').value;
+        state.categories[currentType].forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = `${c.icon} ${c.name}`;
+            if (c.id === sub.categoryId) opt.selected = true;
+            catSelect.appendChild(opt);
+        });
+        catSelect.addEventListener('change', (e) => {
+            currentSubItems[index].categoryId = e.target.value;
+        });
+        
+        // Remove Button
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.innerHTML = '<i class="ph ph-trash"></i>';
+        removeBtn.className = 'icon-btn';
+        removeBtn.style.color = 'var(--danger-color)';
+        removeBtn.addEventListener('click', () => {
+            currentSubItems.splice(index, 1);
+            updateParentAmount();
+            renderSubItemsForm();
+        });
+        
+        row.appendChild(noteInput);
+        row.appendChild(amountInput);
+        row.appendChild(catSelect);
+        row.appendChild(removeBtn);
+        
+        els.subItemsContainer.appendChild(row);
+    });
+    
+    // Update main amount and make it readonly
+    els.amountInput.value = new Intl.NumberFormat('vi-VN').format(totalAmount);
+    els.amountInput.readOnly = true;
+    els.amountInput.style.opacity = '0.6';
+};
+
+const updateParentAmount = () => {
+    const total = currentSubItems.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+    els.amountInput.value = new Intl.NumberFormat('vi-VN').format(total);
+};
+
 // --- Custom Chart Plugins ---
 const centerTextPlugin = {
     id: 'centerText',
@@ -309,19 +410,32 @@ const setupEventListeners = () => {
     });
 
     // Modal Triggers
-    const openModal = () => els.modal.classList.add('active');
+    const openModal = () => {
+        currentSubItems = [];
+        renderSubItemsForm();
+        els.modal.classList.add('active');
+    };
     const closeModal = () => {
         els.modal.classList.remove('active');
         els.form.reset();
         els.dateInput.valueAsDate = new Date();
         document.getElementById('trans-id').value = '';
         document.getElementById('modal-title').textContent = 'Thêm giao dịch';
+        currentSubItems = [];
+        renderSubItemsForm();
     };
 
     els.btnOpenSidebar.addEventListener('click', openModal);
     els.btnOpenPage.addEventListener('click', openModal);
     els.btnCloseModal.addEventListener('click', closeModal);
     els.btnCancelModal.addEventListener('click', closeModal);
+    
+    if (els.btnAddSubItem) {
+        els.btnAddSubItem.addEventListener('click', () => {
+            currentSubItems.push({ note: '', amount: 0, categoryId: els.categorySelect.value });
+            renderSubItemsForm();
+        });
+    }
     
     if (els.reportYear) els.reportYear.addEventListener('change', renderCharts);
     if (els.reportMonth) els.reportMonth.addEventListener('change', renderCharts);
@@ -592,6 +706,8 @@ window.editTransaction = (id) => {
     els.noteInput.value = t.note;
     
     document.getElementById('modal-title').textContent = 'Chỉnh sửa giao dịch';
+    currentSubItems = t.subItems ? JSON.parse(JSON.stringify(t.subItems)) : [];
+    renderSubItemsForm();
     els.modal.classList.add('active');
 };
 
@@ -600,6 +716,20 @@ window.deleteTransaction = (id) => {
         state.transactions = state.transactions.filter(t => t.id !== id);
         saveData();
         updateUI();
+    }
+};
+
+window.toggleSubItems = (id) => {
+    const el = document.getElementById(`sub-${id}`);
+    const caret = document.getElementById(`caret-${id}`);
+    if(el) {
+        if(el.style.display === 'none') {
+            el.style.display = 'table-row';
+            if(caret) caret.classList.replace('ph-caret-down', 'ph-caret-up');
+        } else {
+            el.style.display = 'none';
+            if(caret) caret.classList.replace('ph-caret-up', 'ph-caret-down');
+        }
     }
 };
 
@@ -782,6 +912,11 @@ const saveTransaction = () => {
         date: els.dateInput.value,
         note: els.noteInput.value
     };
+    
+    const validSubItems = currentSubItems.filter(item => item.note.trim() !== '' && item.amount > 0);
+    if (validSubItems.length > 0) {
+        transData.subItems = validSubItems;
+    }
 
     if (transIdStr) {
         // Update existing
@@ -1037,9 +1172,37 @@ const renderFullTransactionsTable = () => {
         const amountClass = isTransactionPositive(t) ? 'positive-text' : 'negative-text';
         const operator = isTransactionPositive(t) ? '+' : '-';
         
+        let subItemsHtml = '';
+        let toggleBtn = '';
+        
+        if (t.subItems && t.subItems.length > 0) {
+            toggleBtn = `<button class="icon-btn" onclick="toggleSubItems('${t.id}')" style="margin-right:8px; font-size:12px; color:var(--text-muted); padding:4px;"><i class="ph ph-caret-down" id="caret-${t.id}"></i></button>`;
+            
+            subItemsHtml = `<tr id="sub-${t.id}" style="display:none; background: rgba(0,0,0,0.015);">
+                <td colspan="5" style="padding:0;">
+                    <table style="width:100%; border-collapse: collapse;">
+                        <tbody>`;
+            
+            t.subItems.forEach(sub => {
+                const subCat = getCategoryById(t.type, sub.categoryId || t.categoryId);
+                subItemsHtml += `
+                            <tr style="border-bottom: 1px dashed rgba(0,0,0,0.05);">
+                                <td style="padding: 10px 15px 10px 40px; font-size: 13px; color:var(--text-muted); width:35%;">↳ ${sub.note}</td>
+                                <td style="padding: 10px 15px; font-size: 13px; color:var(--text-muted); width:25%;"><span class="emoji-icon mini" style="font-size:12px;">${subCat.icon}</span> ${subCat.name}</td>
+                                <td style="padding: 10px 15px; font-size: 13px; color:var(--text-muted); width:15%;">${formatDate(t.date)}</td>
+                                <td class="text-right ${amountClass}" style="padding: 10px 15px; font-size: 13px; width:15%;">
+                                    ${operator}${formatCurrency(sub.amount)}
+                                </td>
+                                <td style="width:10%;"></td>
+                            </tr>
+                `;
+            });
+            subItemsHtml += `</tbody></table></td></tr>`;
+        }
+        
         const html = `
             <tr>
-                <td><strong>${t.note}</strong></td>
+                <td><div style="display:flex; align-items:center;">${toggleBtn}<strong>${t.note}</strong></div></td>
                 <td><span style="display:flex; align-items:center; gap:8px;"><span class="emoji-icon mini">${cat.icon}</span> ${cat.name}</span></td>
                 <td style="color:var(--text-muted);">${formatDate(t.date)}</td>
                 <td class="text-right ${amountClass}" style="font-weight: 600; font-family: var(--font-heading)">
@@ -1054,6 +1217,7 @@ const renderFullTransactionsTable = () => {
                     </button>
                 </td>
             </tr>
+            ${subItemsHtml}
         `;
         els.transactionsBody.insertAdjacentHTML('beforeend', html);
     });

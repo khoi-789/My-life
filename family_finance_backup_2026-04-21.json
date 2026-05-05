@@ -1,0 +1,202 @@
+{
+  "transactions": [
+    {
+      "date": "2026-04-20",
+      "amount": 50000000,
+      "categoryId": "inc_other",
+      "note": "Youtube",
+      "id": "_bjmzccv3u",
+      "type": "income"
+    },
+    {
+      "id": "_0k53aitbd",
+      "type": "expense",
+      "categoryId": "exp_food",
+      "amount": 1500000,
+      "note": "Đi chợ",
+      "date": "2026-04-20"
+    },
+    {
+      "date": "2026-04-20",
+      "note": "Đổ xăng",
+      "categoryId": "exp_transport",
+      "amount": 100000,
+      "type": "expense",
+      "id": "_u26d0zs93"
+    },
+    {
+      "note": "Học làm bánh",
+      "categoryId": "exp_edu",
+      "amount": 500000,
+      "type": "expense",
+      "id": "_x4fkfuzkl",
+      "date": "2026-04-19"
+    },
+    {
+      "date": "2026-04-18",
+      "note": "Cầu lông",
+      "categoryId": "exp_entertain",
+      "amount": 160000,
+      "type": "expense",
+      "id": "_pqprhcm0j"
+    },
+    {
+      "date": "2026-04-18",
+      "categoryId": "exp_transport",
+      "amount": 90000,
+      "note": "Đổ xăng",
+      "id": "_h7qtcd1n4",
+      "type": "expense"
+    },
+    {
+      "note": "Nhà hàng",
+      "amount": 1500000,
+      "categoryId": "exp_food",
+      "type": "expense",
+      "id": "_hlxuu2yg1",
+      "date": "2026-04-17"
+    },
+    {
+      "date": "2026-04-15",
+      "note": "Bình hoa",
+      "amount": 5000000,
+      "categoryId": "exp_shopping",
+      "type": "expense",
+      "id": "_nyr52w5yv"
+    },
+    {
+      "date": "2026-04-10",
+      "note": "Đi chợ",
+      "categoryId": "exp_food",
+      "amount": 500000,
+      "type": "expense",
+      "id": "_lhwc3pjug"
+    },
+    {
+      "amount": 5800000,
+      "categoryId": "exp_family",
+      "note": "Thuê nhà",
+      "id": "_c5wpu13cg",
+      "type": "expense",
+      "date": "2026-04-05"
+    },
+    {
+      "date": "2026-04-05",
+      "amount": 1200000,
+      "categoryId": "exp_family",
+      "note": "Điện, nước, dịch vụ",
+      "id": "t3",
+      "type": "expense"
+    },
+    {
+      "note": "Đi siêu thị",
+      "amount": 1500000,
+      "categoryId": "exp_food",
+      "type": "expense",
+      "id": "t2",
+      "date": "2026-04-02"
+    },
+    {
+      "date": "2026-04-01",
+      "id": "t4",
+      "type": "income",
+      "amount": 50000000,
+      "categoryId": "inc_bonus",
+      "note": "Thưởng dự án"
+    },
+    {
+      "date": "2026-03-31",
+      "id": "t1",
+      "type": "income",
+      "amount": 17000000,
+      "categoryId": "inc_salary",
+      "note": "Lương tháng 3 - Chồng"
+    },
+    {
+      "date": "2026-03-20",
+      "id": "_38qu8lqk7",
+      "type": "expense",
+      "categoryId": "exp_food",
+      "amount": 2000000,
+      "note": "Đi chợ"
+    },
+    {
+      "date": "2026-03-19",
+      "id": "_ubek81gjq",
+      "type": "expense",
+      "categoryId": "exp_food",
+      "amount": 500000,
+      "note": "ĐI siêu thị"
+    }
+  ],
+  "budgets": {
+    "exp_shopping": 1500000,
+    "exp_other": 1000000,
+    "exp_transport": 1500000,
+    "exp_edu": 0,
+    "exp_family": 7000000,
+    "exp_food": 6000000,
+    "exp_entertain": 1100000
+  },
+  "categories": {
+    "expense": [
+      {
+        "id": "exp_food",
+        "icon": "🍔",
+        "name": "Ăn uống"
+      },
+      {
+        "icon": "🚍",
+        "id": "exp_transport",
+        "name": "Di chuyển"
+      },
+      {
+        "name": "Mua sắm",
+        "icon": "🛍️",
+        "id": "exp_shopping"
+      },
+      {
+        "icon": "📚",
+        "id": "exp_edu",
+        "name": "Giáo dục"
+      },
+      {
+        "id": "exp_entertain",
+        "icon": "🎮",
+        "name": "Giải trí"
+      },
+      {
+        "name": "Thuê nhà, điện nước, dịch vụ",
+        "icon": "🏠",
+        "id": "exp_family"
+      },
+      {
+        "name": "Chi tiêu khác",
+        "icon": "💸",
+        "id": "exp_other"
+      }
+    ],
+    "income": [
+      {
+        "icon": "💰",
+        "id": "inc_salary",
+        "name": "Tiền lương"
+      },
+      {
+        "icon": "🎁",
+        "id": "inc_bonus",
+        "name": "Tiền thưởng"
+      },
+      {
+        "icon": "📈",
+        "id": "inc_invest",
+        "name": "Đầu tư"
+      },
+      {
+        "name": "Thu nhập khác",
+        "id": "inc_other",
+        "icon": "💵"
+      }
+    ]
+  }
+}
