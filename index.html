@@ -165,7 +165,10 @@
                             <select id="filter-category" class="glass-input small" style="width:auto; min-width:130px;">
                                 <option value="all">Danh mục: Tất cả</option>
                             </select>
-                            <button class="btn btn-primary small" id="btn-add-transaction-page" style="margin-left: auto;">
+                            <button class="btn btn-secondary small" id="btn-merge-transactions" style="margin-left: auto; display: none; background: var(--primary); color: white; border: none;">
+                                <i class="ph ph-link"></i> Gộp giao dịch
+                            </button>
+                            <button class="btn btn-primary small" id="btn-add-transaction-page" style="margin-left: 10px;">
                                 <i class="ph ph-plus"></i> Thêm mới
                             </button>
                         </div>
@@ -174,6 +177,7 @@
                         <table class="transactions-table">
                             <thead>
                                 <tr>
+                                    <th style="width: 40px; text-align: center;"><input type="checkbox" id="selectAll-transactions" style="cursor: pointer;"></th>
                                     <th>Mô tả</th>
                                     <th>Danh mục</th>
                                     <th>Ngày</th>

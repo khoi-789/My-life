@@ -226,6 +226,10 @@ const els = {
     filterDay: document.getElementById('filter-day'),
     filterCategory: document.getElementById('filter-category'),
     
+    // Merge Transactions
+    btnMergeTransactions: document.getElementById('btn-merge-transactions'),
+    selectAllTransactions: document.getElementById('selectAll-transactions'),
+    
     // Category Modal
     btnOpenCatModal: document.getElementById('btn-open-category-modal'),
     catModal: document.getElementById('category-modal'),
@@ -250,6 +254,8 @@ let charts = {
 
 // State for Sub-items in Add/Edit form
 let currentSubItems = [];
+let selectedTransactionIds = [];
+let mergingTransactionIds = [];
 
 const renderSubItemsForm = () => {
     if (!els.subItemsContainer) return;
@@ -422,8 +428,59 @@ const setupEventListeners = () => {
         document.getElementById('trans-id').value = '';
         document.getElementById('modal-title').textContent = 'Thêm giao dịch';
         currentSubItems = [];
+        mergingTransactionIds = [];
         renderSubItemsForm();
     };
+
+    if (els.selectAllTransactions) {
+        els.selectAllTransactions.addEventListener('change', (e) => {
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            selectedTransactionIds = [];
+            checkboxes.forEach(cb => {
+                cb.checked = e.target.checked;
+                if(e.target.checked) selectedTransactionIds.push(cb.value);
+            });
+            updateMergeButtonState();
+        });
+    }
+
+    if (els.btnMergeTransactions) {
+        els.btnMergeTransactions.addEventListener('click', () => {
+            const itemsToMerge = state.transactions.filter(t => selectedTransactionIds.includes(t.id));
+            if(itemsToMerge.length < 2) return;
+            
+            const firstItem = itemsToMerge[0];
+            
+            // Populate subItems
+            currentSubItems = itemsToMerge.map(t => {
+                return {
+                    note: t.note,
+                    amount: t.amount,
+                    categoryId: t.categoryId
+                };
+            });
+            
+            // Set merging state
+            mergingTransactionIds = [...selectedTransactionIds];
+            
+            // Reset form for new parent transaction
+            els.form.reset();
+            document.getElementById('trans-id').value = '';
+            document.getElementById('modal-title').textContent = 'Gộp giao dịch';
+            
+            const typeRadio = document.querySelector(`input[name="type"][value="${firstItem.type}"]`);
+            if(typeRadio) {
+                typeRadio.checked = true;
+                populateCategories(firstItem.type);
+            }
+            
+            els.dateInput.value = firstItem.date;
+            els.noteInput.value = 'Giao dịch gộp';
+            
+            renderSubItemsForm();
+            els.modal.classList.add('active');
+        });
+    }
 
     els.btnOpenSidebar.addEventListener('click', openModal);
     els.btnOpenPage.addEventListener('click', openModal);
@@ -733,6 +790,32 @@ window.toggleSubItems = (id) => {
     }
 };
 
+window.handleRowCheckboxChange = (cb) => {
+    if(cb.checked) {
+        selectedTransactionIds.push(cb.value);
+    } else {
+        selectedTransactionIds = selectedTransactionIds.filter(id => id !== cb.value);
+    }
+    updateMergeButtonState();
+};
+
+const updateMergeButtonState = () => {
+    if (!els.btnMergeTransactions) return;
+    if(selectedTransactionIds.length >= 2) {
+        const types = new Set();
+        selectedTransactionIds.forEach(id => {
+            const t = state.transactions.find(tr => tr.id === id);
+            if(t) types.add(t.type);
+        });
+        if(types.size === 1) {
+            els.btnMergeTransactions.style.display = 'flex';
+            els.btnMergeTransactions.innerHTML = `<i class="ph ph-link"></i> Gộp ${selectedTransactionIds.length} mục`;
+            return;
+        }
+    }
+    els.btnMergeTransactions.style.display = 'none';
+};
+
 window.editCategory = (id, type) => {
     const cat = state.categories[type].find(c => c.id === id);
     if (!cat) return;
@@ -933,6 +1016,15 @@ const saveTransaction = () => {
     
     // Sort descending by date
     state.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    // Handle merge cleanup
+    if (mergingTransactionIds.length > 0) {
+        state.transactions = state.transactions.filter(t => !mergingTransactionIds.includes(t.id));
+        mergingTransactionIds = [];
+        selectedTransactionIds = [];
+        if (els.selectAllTransactions) els.selectAllTransactions.checked = false;
+        if (els.btnMergeTransactions) els.btnMergeTransactions.style.display = 'none';
+    }
     
     saveData();
     updateUI();
@@ -1202,6 +1294,7 @@ const renderFullTransactionsTable = () => {
         
         const html = `
             <tr>
+                <td style="text-align: center;"><input type="checkbox" class="row-checkbox" value="${t.id}" onchange="handleRowCheckboxChange(this)" ${selectedTransactionIds.includes(t.id) ? 'checked' : ''}></td>
                 <td><div style="display:flex; align-items:center;">${toggleBtn}<strong>${t.note}</strong></div></td>
                 <td><span style="display:flex; align-items:center; gap:8px;"><span class="emoji-icon mini">${cat.icon}</span> ${cat.name}</span></td>
                 <td style="color:var(--text-muted);">${formatDate(t.date)}</td>
