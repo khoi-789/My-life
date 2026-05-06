@@ -740,7 +740,7 @@ const setupEventListeners = () => {
             if (index !== -1) {
                 state.categories[type][index].name = els.catNameInput.value;
                 state.categories[type][index].icon = els.catIconInput.value;
-                state.categories[type][index].description = els.catDescInput.value;
+                if (els.catDescInput) state.categories[type][index].description = els.catDescInput.value;
             }
         } else {
             // Add
@@ -748,9 +748,9 @@ const setupEventListeners = () => {
             const newCat = {
                 id: targetId,
                 name: els.catNameInput.value,
-                icon: els.catIconInput.value,
-                description: els.catDescInput.value
+                icon: els.catIconInput.value
             };
+            if (els.catDescInput) newCat.description = els.catDescInput.value;
             state.categories[type].push(newCat);
         }
 
@@ -866,7 +866,7 @@ window.editCategory = (id, type) => {
     els.editCatIdInput.value = cat.id;
     els.catIconInput.value = cat.icon;
     els.catNameInput.value = cat.name;
-    els.catDescInput.value = cat.description || '';
+    if (els.catDescInput) els.catDescInput.value = cat.description || '';
 
     if (type === 'expense' && state.budgets && state.budgets[id]) {
         els.catBudgetInput.value = new Intl.NumberFormat('vi-VN').format(state.budgets[id]);
@@ -1097,19 +1097,24 @@ const updateUI = () => {
 };
 
 const renderGuide = () => {
-    const types = ['expense', 'income', 'debt'];
+    const types = [
+        { key: 'expense', label: 'Nhóm CHI TIÊU (Expense)', color: '#f43f5e', icon: 'ph-trend-down' },
+        { key: 'income', label: 'Nhóm THU NHẬP (Income)', color: '#10b981', icon: 'ph-trend-up' },
+        { key: 'debt', label: 'Nhóm VAY/NỢ (Debt)', color: '#3b82f6', icon: 'ph-hand-coins' }
+    ];
+    
     types.forEach(type => {
-        const container = document.getElementById(`guide-${type}-list`);
+        const container = document.getElementById(`guide-${type.key}-list`);
         if(!container) return;
         container.innerHTML = '';
-        state.categories[type].forEach(cat => {
+        state.categories[type.key].forEach(cat => {
             const html = `
-                <div class="guide-item glass-panel" style="padding: 16px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); background: rgba(255,255,255,0.2);">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                        <span class="emoji-icon mini">${cat.icon}</span>
-                        <strong style="font-size: 16px; color: var(--text-main);">${cat.name}</strong>
+                <div class="guide-item glass-panel" style="padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.4); background: rgba(255,255,255,0.6); transition: transform 0.2s; cursor: default;">
+                    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 10px;">
+                        <span class="emoji-icon mini" style="background: ${type.color}15; padding: 10px; border-radius: 12px;">${cat.icon}</span>
+                        <strong style="font-size: 17px; color: var(--text-main);">${cat.name}</strong>
                     </div>
-                    <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5; margin: 0;">${cat.description || 'Chưa có diễn giải.'}</p>
+                    <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin: 0; padding-left: 2px;">${cat.description || 'Chưa có diễn giải chi tiết cho danh mục này.'}</p>
                 </div>
             `;
             container.insertAdjacentHTML('beforeend', html);
