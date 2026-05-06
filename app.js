@@ -1310,7 +1310,7 @@ const renderRecentTransactions = () => {
                     </div>
                 </div>
                 <div class="trans-right">
-                    <div class="trans-amount ${isTransactionPositive(t) ? 'positive-text' : 'negative-text'}">
+                    <div class="trans-amount ${t.type === 'income' ? 'income-text' : (t.type === 'debt' ? 'debt-text' : 'expense-text')}">
                         ${isTransactionPositive(t) ? '+' : '-'}${formatCurrency(t.amount)}
                     </div>
                     <div class="trans-date">${formatDate(t.date)}</div>
@@ -1357,7 +1357,10 @@ const renderFullTransactionsTable = () => {
 
     filteredList.forEach(t => {
         const cat = getCategoryById(t.type, t.categoryId);
-        const amountClass = isTransactionPositive(t) ? 'positive-text' : 'negative-text';
+        let amountClass = 'expense-text';
+        if (t.type === 'income') amountClass = 'income-text';
+        if (t.type === 'debt') amountClass = 'debt-text';
+        
         const operator = isTransactionPositive(t) ? '+' : '-';
         
         let subItemsHtml = '';

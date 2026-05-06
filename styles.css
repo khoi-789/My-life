@@ -22,8 +22,9 @@
     --font-heading: 'Outfit', sans-serif;
     --font-body: 'Inter', sans-serif;
 
-    --positive: #3b82f6; /* Blue for Income */
-    --negative: #ef4444; /* Red for Expense */
+    --income-color: #15803d; /* Dark Green */
+    --debt-color: #2563eb;   /* Blue */
+    --expense-color: #f43f5e; /* Red */
 }
 
 * {
@@ -864,3 +865,23 @@ input:checked + .debt-box {
     }
 }
 
+
+.income-text {
+    color: var(--income-color) !important;
+}
+
+.debt-text {
+    color: var(--debt-color) !important;
+}
+
+.expense-text {
+    color: var(--expense-color) !important;
+}
+
+.positive-text {
+    color: var(--success) !important;
+}
+
+.negative-text {
+    color: var(--danger) !important;
+}
