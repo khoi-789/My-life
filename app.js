@@ -24,25 +24,25 @@ const STORAGE_KEY = 'family_finance_data';
 
 const DEFAULT_CATEGORIES = {
     income: [
-        { id: 'inc_salary', name: 'Tiền lương', icon: '💰', description: 'Thu nhập chính hàng tháng, lương cứng.' },
-        { id: 'inc_bonus', name: 'Tiền thưởng', icon: '🎁', description: 'Thưởng KPI, lễ tết, thưởng dự án.' },
-        { id: 'inc_invest', name: 'Đầu tư', icon: '📈', description: 'Lãi ngân hàng, cổ tức, lợi nhuận kinh doanh.' },
-        { id: 'inc_other', name: 'Thu nhập khác', icon: '💵', description: 'Tiền được biếu, bán đồ cũ, thu nhập vãng lai.' }
+        { id: 'inc_salary', name: 'Tiền lương', icon: '💰', description: 'Các khoản thu nhập chính từ lương cứng, tiền công nhận được hàng tháng theo hợp đồng lao động.' },
+        { id: 'inc_bonus', name: 'Tiền thưởng', icon: '🎁', description: 'Thưởng KPI, thưởng lễ tết, thưởng nóng dự án hoặc các khoản tiền mặt được tặng.' },
+        { id: 'inc_invest', name: 'Đầu tư', icon: '📈', description: 'Lãi tiết kiệm ngân hàng, cổ tức từ chứng khoán, lợi nhuận từ kinh doanh riêng hoặc cho thuê nhà.' },
+        { id: 'inc_other', name: 'Thu nhập khác', icon: '💵', description: 'Tiền được người thân biếu, tiền bán đồ cũ thanh lý hoặc các khoản thu nhập vãng lai không định kỳ.' }
     ],
     expense: [
-        { id: 'exp_food', name: 'Ăn uống', icon: '🍔', description: 'Đi chợ, siêu thị, ăn sáng, cafe, ăn tiệm, liên hoan.' },
-        { id: 'exp_transport', name: 'Di chuyển', icon: '🚍', description: 'Xăng xe, sửa xe, gửi xe, phí cầu đường, Grab/Taxi.' },
-        { id: 'exp_shopping', name: 'Mua sắm', icon: '🛍️', description: 'Quần áo, mỹ phẩm, đồ gia dụng nhỏ (ly, hộp, decor...), đồ công nghệ nhỏ.' },
-        { id: 'exp_bill', name: 'Điện nước', icon: '💡', description: 'Điện, nước, internet, truyền hình cáp, điện thoại.' },
-        { id: 'exp_edu', name: 'Giáo dục', icon: '📚', description: 'Học phí, sách vở, dụng cụ học tập, khóa học kỹ năng.' },
-        { id: 'exp_entertain', name: 'Giải trí', icon: '🎮', description: 'Xem phim, Netflix, du lịch, vui chơi cuối tuần.' },
-        { id: 'exp_other', name: 'Chi tiêu khác', icon: '💸', description: 'Quà tặng, hiếu hỉ, khám bệnh, thuốc, phí ngân hàng.' }
+        { id: 'exp_food', name: 'Ăn uống', icon: '🍔', description: 'Bao gồm đi chợ, siêu thị mua thực phẩm, ăn sáng, cơm trưa văn phòng, cà phê, trà sữa, ăn tiệm và các buổi liên hoan.' },
+        { id: 'exp_transport', name: 'Di chuyển', icon: '🚍', description: 'Tiền xăng xe, thay dầu, sửa chữa xe, tiền gửi xe hàng tháng, phí cầu đường, Grab/Be hoặc vé xe khách, máy bay.' },
+        { id: 'exp_shopping', name: 'Mua sắm', icon: '🛍️', description: 'Quần áo, giày dép, túi xách, mỹ phẩm, đồ dùng cá nhân, đồ gia dụng nhỏ (ly, hộp, đồ decor…), đồ công nghệ nhỏ (tai nghe, phụ kiện).' },
+        { id: 'exp_bill', name: 'Điện nước', icon: '💡', description: 'Các hóa đơn cố định hàng tháng gồm tiền điện, tiền nước, cước internet, truyền hình cáp, tiền điện thoại.' },
+        { id: 'exp_edu', name: 'Giáo dục', icon: '📚', description: 'Tiền học phí, mua sách vở, dụng cụ học tập, các khóa học kỹ năng, ngoại ngữ hoặc hội thảo.' },
+        { id: 'exp_entertain', name: 'Giải trí', icon: '🎮', description: 'Vé xem phim, đăng ký Netflix/Youtube Premium, mua game, đi du lịch, tham quan hoặc các hoạt động vui chơi cuối tuần.' },
+        { id: 'exp_other', name: 'Chi tiêu khác', icon: '💸', description: 'Quà tặng, hiếu hỉ, khám bệnh, thuốc, phí ngân hàng, từ thiện, đánh rơi tiền hoặc các khoản phát sinh bất ngờ.' }
     ],
     debt: [
-        { id: 'debt_loan', name: 'Cho vay', icon: '📤', description: 'Đưa tiền cho người khác mượn.' },
-        { id: 'debt_borrow', name: 'Đi vay', icon: '📥', description: 'Mượn tiền từ người khác hoặc ngân hàng.' },
-        { id: 'debt_recover', name: 'Thu nợ', icon: '💰', description: 'Người khác trả lại tiền đã mượn.' },
-        { id: 'debt_repay', name: 'Trả nợ', icon: '💸', description: 'Trả lại tiền đã mượn cho người khác.' }
+        { id: 'debt_loan', name: 'Cho vay', icon: '📤', description: 'Số tiền bạn đưa cho người khác mượn (làm giảm số dư hiện tại).' },
+        { id: 'debt_borrow', name: 'Đi vay', icon: '📥', description: 'Số tiền bạn mượn từ người khác hoặc ngân hàng (làm tăng số dư hiện tại).' },
+        { id: 'debt_recover', name: 'Thu nợ', icon: '💰', description: 'Tiền người khác trả lại cho bạn sau khi đã mượn (làm tăng số dư).' },
+        { id: 'debt_repay', name: 'Trả nợ', icon: '💸', description: 'Tiền bạn trả lại cho người khác sau khi đã mượn (làm giảm số dư).' }
     ]
 };
 
@@ -103,10 +103,8 @@ const migrateState = (data) => {
         data.categories[type].forEach(cat => {
             const defCat = DEFAULT_CATEGORIES[type].find(d => d.id === cat.id);
             if (defCat) {
-                // If no description yet, or it's one of the default ones we want to update
-                if (!cat.description || cat.id === 'exp_shopping' || cat.id === 'exp_other') {
-                    cat.description = defCat.description;
-                }
+                // Force update all default categories to ensure content matches user's request
+                cat.description = defCat.description;
             }
         });
     });
@@ -144,7 +142,6 @@ const loadData = async () => {
             }
             await saveData();
         }
-        }
     } catch (e) {
         console.error("Cloud Error:", e);
     }
@@ -155,9 +152,7 @@ const loadData = async () => {
             const data = doc.data();
             // Check if there are changes to avoid infinite UI loops
             if (JSON.stringify(data) !== JSON.stringify(state)) {
-                state = data;
-                if (!state.categories) state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-                if (!state.categories.debt) state.categories.debt = [...DEFAULT_CATEGORIES.debt];
+                state = migrateState(data);
                 saveDataLocal();
                 updateUI();
             }
