@@ -87,35 +87,44 @@ const getCategoryById = (type, id) => {
 };
 
 // --- Storage API ---
-const loadData = async () => {
-    // 1. Try to load from LocalStorage first (for speed)
-    const localData = localStorage.getItem(STORAGE_KEY);
-    if (localData) {
-        state = JSON.parse(localData);
-        if (!state.budgets) state.budgets = {};
-        if (!state.categories) state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-        if (!state.categories.debt) state.categories.debt = [...DEFAULT_CATEGORIES.debt]; 
+const migrateState = (data) => {
+    if (!data) return data;
+    if (!data.budgets) data.budgets = {};
+    if (!data.categories) data.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+    if (!data.categories.debt) data.categories.debt = [...DEFAULT_CATEGORIES.debt];
 
-        // Migration: Remove 'exp_family' and update descriptions
-        if (state.categories.expense) {
-            state.categories.expense = state.categories.expense.filter(c => c.id !== 'exp_family');
-        }
-        
-        // Update descriptions from DEFAULT_CATEGORIES for existing ones that don't have it
-        ['income', 'expense', 'debt'].forEach(type => {
-            state.categories[type].forEach(cat => {
-                const defCat = DEFAULT_CATEGORIES[type].find(d => d.id === cat.id);
-                if (defCat && !cat.description) {
+    // 1. Remove 'exp_family' and update descriptions
+    if (data.categories.expense) {
+        data.categories.expense = data.categories.expense.filter(c => c.id !== 'exp_family');
+    }
+    
+    // 2. Force update descriptions from DEFAULT_CATEGORIES to ensure user gets the latest text
+    ['income', 'expense', 'debt'].forEach(type => {
+        data.categories[type].forEach(cat => {
+            const defCat = DEFAULT_CATEGORIES[type].find(d => d.id === cat.id);
+            if (defCat) {
+                // If no description yet, or it's one of the default ones we want to update
+                if (!cat.description || cat.id === 'exp_shopping' || cat.id === 'exp_other') {
                     cat.description = defCat.description;
                 }
-            });
+            }
         });
-        
-        // Force update icons for debt if they are the old ones
-        state.categories.debt.forEach(c => {
-            const def = DEFAULT_CATEGORIES.debt.find(d => d.id === c.id);
-            if (def) c.icon = def.icon;
-        });
+    });
+
+    // 3. Force update icons for debt if they are the old ones
+    data.categories.debt.forEach(c => {
+        const def = DEFAULT_CATEGORIES.debt.find(d => d.id === c.id);
+        if (def) c.icon = def.icon;
+    });
+
+    return data;
+};
+
+const loadData = async () => {
+    // 1. Try to load from LocalStorage first
+    const localData = localStorage.getItem(STORAGE_KEY);
+    if (localData) {
+        state = migrateState(JSON.parse(localData));
         updateUI();
     }
 
@@ -123,11 +132,7 @@ const loadData = async () => {
     try {
         const docSnap = await docRef.get();
         if (docSnap.exists) {
-            const cloudData = docSnap.data();
-            // Merge or replace (here we replace with cloud since it's the source of truth)
-            state = cloudData;
-            if (!state.categories) state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
-            if (!state.categories.debt) state.categories.debt = [...DEFAULT_CATEGORIES.debt];
+            state = migrateState(docSnap.data());
             saveDataLocal();
             updateUI();
         } else {
@@ -137,7 +142,8 @@ const loadData = async () => {
                 state.budgets = {};
                 state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
             }
-            await saveData(); // Initial push to cloud
+            await saveData();
+        }
         }
     } catch (e) {
         console.error("Cloud Error:", e);
@@ -791,6 +797,15 @@ window.editTransaction = (id) => {
     els.categorySelect.value = t.categoryId;
     els.dateInput.value = t.date;
     els.noteInput.value = t.note;
+
+    // Trigger description update
+    const cat = state.categories[t.type].find(c => c.id === t.categoryId);
+    if (cat && cat.description) {
+        els.transCatDesc.textContent = cat.description;
+        els.transCatDesc.style.display = 'block';
+    } else {
+        els.transCatDesc.style.display = 'none';
+    }
     
     document.getElementById('modal-title').textContent = 'Chỉnh sửa giao dịch';
     currentSubItems = t.subItems ? JSON.parse(JSON.stringify(t.subItems)) : [];
