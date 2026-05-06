@@ -140,6 +140,8 @@ const loadData = async () => {
             state = migrateState(docSnap.data());
             saveDataLocal();
             updateUI();
+            // Force save to cloud once to ensure migration is synced
+            saveData();
         } else {
             // First time cloud setup
             if (!localData) {
