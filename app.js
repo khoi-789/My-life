@@ -24,26 +24,25 @@ const STORAGE_KEY = 'family_finance_data';
 
 const DEFAULT_CATEGORIES = {
     income: [
-        { id: 'inc_salary', name: 'Tiền lương', icon: '💰' },
-        { id: 'inc_bonus', name: 'Tiền thưởng', icon: '🎁' },
-        { id: 'inc_invest', name: 'Đầu tư', icon: '📈' },
-        { id: 'inc_other', name: 'Thu nhập khác', icon: '💵' }
+        { id: 'inc_salary', name: 'Tiền lương', icon: '💰', description: 'Thu nhập chính hàng tháng, lương cứng.' },
+        { id: 'inc_bonus', name: 'Tiền thưởng', icon: '🎁', description: 'Thưởng KPI, lễ tết, thưởng dự án.' },
+        { id: 'inc_invest', name: 'Đầu tư', icon: '📈', description: 'Lãi ngân hàng, cổ tức, lợi nhuận kinh doanh.' },
+        { id: 'inc_other', name: 'Thu nhập khác', icon: '💵', description: 'Tiền được biếu, bán đồ cũ, thu nhập vãng lai.' }
     ],
     expense: [
-        { id: 'exp_food', name: 'Ăn uống', icon: '🍔' },
-        { id: 'exp_transport', name: 'Di chuyển', icon: '🚍' },
-        { id: 'exp_shopping', name: 'Mua sắm', icon: '🛍️' },
-        { id: 'exp_bill', name: 'Điện nước', icon: '💡' },
-        { id: 'exp_edu', name: 'Giáo dục', icon: '📚' },
-        { id: 'exp_entertain', name: 'Giải trí', icon: '🎮' },
-        { id: 'exp_family', name: 'Gia đình', icon: '🏠' },
-        { id: 'exp_other', name: 'Chi tiêu khác', icon: '💸' }
+        { id: 'exp_food', name: 'Ăn uống', icon: '🍔', description: 'Đi chợ, siêu thị, ăn sáng, cafe, ăn tiệm, liên hoan.' },
+        { id: 'exp_transport', name: 'Di chuyển', icon: '🚍', description: 'Xăng xe, sửa xe, gửi xe, phí cầu đường, Grab/Taxi.' },
+        { id: 'exp_shopping', name: 'Mua sắm', icon: '🛍️', description: 'Quần áo, mỹ phẩm, đồ gia dụng nhỏ (ly, hộp, decor...), đồ công nghệ nhỏ.' },
+        { id: 'exp_bill', name: 'Điện nước', icon: '💡', description: 'Điện, nước, internet, truyền hình cáp, điện thoại.' },
+        { id: 'exp_edu', name: 'Giáo dục', icon: '📚', description: 'Học phí, sách vở, dụng cụ học tập, khóa học kỹ năng.' },
+        { id: 'exp_entertain', name: 'Giải trí', icon: '🎮', description: 'Xem phim, Netflix, du lịch, vui chơi cuối tuần.' },
+        { id: 'exp_other', name: 'Chi tiêu khác', icon: '💸', description: 'Quà tặng, hiếu hỉ, khám bệnh, thuốc, phí ngân hàng.' }
     ],
     debt: [
-        { id: 'debt_loan', name: 'Cho vay', icon: '📤' },
-        { id: 'debt_borrow', name: 'Đi vay', icon: '📥' },
-        { id: 'debt_recover', name: 'Thu nợ', icon: '💰' },
-        { id: 'debt_repay', name: 'Trả nợ', icon: '💸' }
+        { id: 'debt_loan', name: 'Cho vay', icon: '📤', description: 'Đưa tiền cho người khác mượn.' },
+        { id: 'debt_borrow', name: 'Đi vay', icon: '📥', description: 'Mượn tiền từ người khác hoặc ngân hàng.' },
+        { id: 'debt_recover', name: 'Thu nợ', icon: '💰', description: 'Người khác trả lại tiền đã mượn.' },
+        { id: 'debt_repay', name: 'Trả nợ', icon: '💸', description: 'Trả lại tiền đã mượn cho người khác.' }
     ]
 };
 
@@ -96,6 +95,22 @@ const loadData = async () => {
         if (!state.budgets) state.budgets = {};
         if (!state.categories) state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
         if (!state.categories.debt) state.categories.debt = [...DEFAULT_CATEGORIES.debt]; 
+
+        // Migration: Remove 'exp_family' and update descriptions
+        if (state.categories.expense) {
+            state.categories.expense = state.categories.expense.filter(c => c.id !== 'exp_family');
+        }
+        
+        // Update descriptions from DEFAULT_CATEGORIES for existing ones that don't have it
+        ['income', 'expense', 'debt'].forEach(type => {
+            state.categories[type].forEach(cat => {
+                const defCat = DEFAULT_CATEGORIES[type].find(d => d.id === cat.id);
+                if (defCat && !cat.description) {
+                    cat.description = defCat.description;
+                }
+            });
+        });
+        
         // Force update icons for debt if they are the old ones
         state.categories.debt.forEach(c => {
             const def = DEFAULT_CATEGORIES.debt.find(d => d.id === c.id);
@@ -241,7 +256,9 @@ const els = {
     catBudgetInput: document.getElementById('cat-budget'),
     budgetInputGroup: document.getElementById('budget-input-group'),
     editCatIdInput: document.getElementById('edit-cat-id'),
-    catModalTitle: document.getElementById('cat-modal-title')
+    catModalTitle: document.getElementById('cat-modal-title'),
+    catDescInput: document.getElementById('cat-desc'),
+    transCatDesc: document.getElementById('trans-cat-desc')
 };
 
 // Chart Instances
@@ -415,7 +432,17 @@ const setupEventListeners = () => {
         });
     });
 
-    // Modal Triggers
+    els.categorySelect.addEventListener('change', () => {
+        const type = document.querySelector('input[name="type"]:checked').value;
+        const cat = state.categories[type].find(c => c.id === els.categorySelect.value);
+        if (cat && cat.description) {
+            els.transCatDesc.textContent = cat.description;
+            els.transCatDesc.style.display = 'block';
+        } else {
+            els.transCatDesc.style.display = 'none';
+        }
+    });
+
     const openModal = () => {
         currentSubItems = [];
         renderSubItemsForm();
@@ -666,6 +693,7 @@ const setupEventListeners = () => {
         if(els.catBudgetInput) els.catBudgetInput.value = '';
         els.catModalTitle.textContent = 'Thêm hạng mục mới';
         if(els.budgetInputGroup) els.budgetInputGroup.style.display = 'block';
+        if(els.catDescInput) els.catDescInput.value = '';
         const radio = document.querySelector('input[name="cat_type"][value="expense"]');
         if (radio) radio.checked = true;
         els.catModal.classList.add('active');
@@ -711,6 +739,7 @@ const setupEventListeners = () => {
             if (index !== -1) {
                 state.categories[type][index].name = els.catNameInput.value;
                 state.categories[type][index].icon = els.catIconInput.value;
+                state.categories[type][index].description = els.catDescInput.value;
             }
         } else {
             // Add
@@ -718,7 +747,8 @@ const setupEventListeners = () => {
             const newCat = {
                 id: targetId,
                 name: els.catNameInput.value,
-                icon: els.catIconInput.value
+                icon: els.catIconInput.value,
+                description: els.catDescInput.value
             };
             state.categories[type].push(newCat);
         }
@@ -826,6 +856,7 @@ window.editCategory = (id, type) => {
     els.editCatIdInput.value = cat.id;
     els.catIconInput.value = cat.icon;
     els.catNameInput.value = cat.name;
+    els.catDescInput.value = cat.description || '';
 
     if (type === 'expense' && state.budgets && state.budgets[id]) {
         els.catBudgetInput.value = new Intl.NumberFormat('vi-VN').format(state.budgets[id]);
@@ -982,6 +1013,17 @@ const populateCategories = (type) => {
         option.textContent = cat.name;
         els.categorySelect.appendChild(option);
     });
+    
+    // Update description for the first selected category
+    if (state.categories[type].length > 0) {
+        const firstCat = state.categories[type][0];
+        if (firstCat.description) {
+            els.transCatDesc.textContent = firstCat.description;
+            els.transCatDesc.style.display = 'block';
+        } else {
+            els.transCatDesc.style.display = 'none';
+        }
+    }
 };
 
 const saveTransaction = () => {
