@@ -33,7 +33,7 @@ const DEFAULT_CATEGORIES = {
         { id: 'exp_food', name: 'Ăn uống', icon: '🍔', description: 'Bao gồm đi chợ, siêu thị mua thực phẩm, ăn sáng, cơm trưa văn phòng, cà phê, trà sữa, ăn tiệm và các buổi liên hoan.' },
         { id: 'exp_transport', name: 'Di chuyển', icon: '🚍', description: 'Tiền xăng xe, thay dầu, sửa chữa xe, tiền gửi xe hàng tháng, phí cầu đường, Grab/Be hoặc vé xe khách, máy bay.' },
         { id: 'exp_shopping', name: 'Mua sắm', icon: '🛍️', description: 'Quần áo, giày dép, túi xách, mỹ phẩm, đồ dùng cá nhân, đồ gia dụng nhỏ (ly, hộp, đồ decor…), đồ công nghệ nhỏ (tai nghe, phụ kiện).' },
-        { id: 'exp_bill', name: 'Thuê nhà, điện nước', icon: '🏠', description: 'Tiền thuê nhà hàng tháng và các hóa đơn cố định gồm tiền điện, tiền nước, cước internet, truyền hình cáp, tiền điện thoại.' },
+        { id: 'exp_bill', name: 'Thuê nhà, điện, nước', icon: '🏠', description: 'Tiền thuê nhà hàng tháng và các hóa đơn cố định gồm tiền điện, tiền nước, cước internet, truyền hình cáp, tiền điện thoại.' },
         { id: 'exp_edu', name: 'Giáo dục', icon: '📚', description: 'Tiền học phí, mua sách vở, dụng cụ học tập, các khóa học kỹ năng, ngoại ngữ hoặc hội thảo.' },
         { id: 'exp_entertain', name: 'Giải trí', icon: '🎮', description: 'Vé xem phim, đăng ký Netflix/Youtube Premium, mua game, đi du lịch, tham quan hoặc các hoạt động vui chơi cuối tuần.' },
         { id: 'exp_other', name: 'Chi tiêu khác', icon: '💸', description: 'Quà tặng, hiếu hỉ, khám bệnh, thuốc, phí ngân hàng, từ thiện, đánh rơi tiền hoặc các khoản phát sinh bất ngờ.' }
@@ -98,15 +98,19 @@ const migrateState = (data) => {
         data.categories.expense = data.categories.expense.filter(c => c.id !== 'exp_family');
     }
     
-    // 2. Force update descriptions from DEFAULT_CATEGORIES to ensure user gets the latest text
+    // 2. Ensure all DEFAULT_CATEGORIES exist and are updated
     ['income', 'expense', 'debt'].forEach(type => {
-        data.categories[type].forEach(cat => {
-            const defCat = DEFAULT_CATEGORIES[type].find(d => d.id === cat.id);
-            if (defCat) {
-                // Force update all default categories to ensure content matches user's request
-                cat.description = defCat.description;
+        DEFAULT_CATEGORIES[type].forEach(defCat => {
+            let cat = data.categories[type].find(c => c.id === defCat.id);
+            if (!cat) {
+                // Category is missing, add it back
+                cat = { ...defCat };
+                data.categories[type].push(cat);
+            } else {
+                // Category exists, force update name, icon and description to match latest requirements
                 cat.name = defCat.name;
                 cat.icon = defCat.icon;
+                cat.description = defCat.description;
             }
         });
     });
