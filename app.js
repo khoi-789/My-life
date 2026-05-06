@@ -917,7 +917,8 @@ const switchTab = (tabId) => {
             'dashboard': 'Tổng quan',
             'transactions': 'Lịch sử giao dịch',
             'reports': 'Báo cáo thông minh',
-            'settings': 'Cài đặt hệ thống'
+            'settings': 'Cài đặt hệ thống',
+            'guide': 'Hướng dẫn sử dụng'
         };
         pageTitle.textContent = titles[tabId];
     }
@@ -933,6 +934,9 @@ const switchTab = (tabId) => {
     // Rerender charts if needed
     if(tabId === 'reports' || tabId === 'dashboard') {
         renderCharts();
+    }
+    if(tabId === 'guide') {
+        renderGuide();
     }
     
     updateUI();
@@ -1089,6 +1093,28 @@ const updateUI = () => {
     renderFullTransactionsTable();
     renderCharts();
     renderBudgetProgress();
+    renderGuide();
+};
+
+const renderGuide = () => {
+    const types = ['expense', 'income', 'debt'];
+    types.forEach(type => {
+        const container = document.getElementById(`guide-${type}-list`);
+        if(!container) return;
+        container.innerHTML = '';
+        state.categories[type].forEach(cat => {
+            const html = `
+                <div class="guide-item glass-panel" style="padding: 16px; border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); background: rgba(255,255,255,0.2);">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                        <span class="emoji-icon mini">${cat.icon}</span>
+                        <strong style="font-size: 16px; color: var(--text-main);">${cat.name}</strong>
+                    </div>
+                    <p style="font-size: 14px; color: var(--text-muted); line-height: 1.5; margin: 0;">${cat.description || 'Chưa có diễn giải.'}</p>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        });
+    });
 };
 
 const renderSettings = () => {

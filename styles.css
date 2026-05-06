@@ -810,3 +810,15 @@ input:checked + .debt-box {
 .progress-fill.danger {
     background: #ef4444 !important; /* Bold Red */
 }
+/* Guide Page */
+.guide-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+
+@media (max-width: 768px) {
+    .guide-grid {
+        grid-template-columns: 1fr;
+    }
+}
