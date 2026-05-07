@@ -820,8 +820,12 @@ input:checked + .debt-box {
     .report-filters .glass-input {
         width: 100% !important;
     }
-    #gold-purchase-card div[style*="display:grid"] {
+    #gold-purchase-card div[style*="display:grid"],
+    #gold-purchase-card .card-body > div[style*="display:grid"] {
         grid-template-columns: 1fr !important;
+    }
+    #gold-purchase-card .form-group {
+        grid-column: span 1 !important;
     }
 }
 
