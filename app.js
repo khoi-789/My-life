@@ -254,6 +254,7 @@ const els = {
     filterMonth: document.getElementById('filter-month'),
     filterDay: document.getElementById('filter-day'),
     filterCategory: document.getElementById('filter-category'),
+    filterSearch: document.getElementById('filter-search'),
     
     // Merge Transactions
     btnMergeTransactions: document.getElementById('btn-merge-transactions'),
@@ -632,6 +633,9 @@ const setupEventListeners = () => {
     }
     if(els.filterCategory) {
         els.filterCategory.addEventListener('change', renderFullTransactionsTable);
+    }
+    if(els.filterSearch) {
+        els.filterSearch.addEventListener('input', renderFullTransactionsTable);
     }
 
     // Settings
@@ -1330,6 +1334,7 @@ const renderFullTransactionsTable = () => {
     const filterMo = els.filterMonth ? els.filterMonth.value : 'all';
     const filterDa = els.filterDay ? els.filterDay.value : 'all';
     const filterCat = els.filterCategory ? els.filterCategory.value : 'all';
+    const filterSearchText = els.filterSearch ? els.filterSearch.value.trim().toLowerCase() : '';
 
     let filteredList = state.transactions;
     
@@ -1347,7 +1352,10 @@ const renderFullTransactionsTable = () => {
         const matchMonth = filterMo === 'all' || Math.floor(filterMo) === (tDate.getMonth() + 1);
         const matchDay = filterDa === 'all' || Math.floor(filterDa) === tDate.getDate();
 
-        return matchYear && matchMonth && matchDay;
+        // Search Match
+        const matchSearch = filterSearchText === '' || t.note.toLowerCase().includes(filterSearchText);
+
+        return matchYear && matchMonth && matchDay && matchSearch;
     });
 
     if (filteredList.length === 0) {
