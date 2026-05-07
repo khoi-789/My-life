@@ -342,9 +342,9 @@
                         </p>
                 </div>
 
-                <!-- Section: Chi tiết mua vàng -->
-                <div class="dashboard-grid" style="margin-top:24px;">
-                    <div class="card glass-panel col-span-3" id="gold-purchase-card">
+                <!-- Section: Chi tiết mua vàng - Đã chuyển ra ngoài Grid 3 cột để chiếm 100% width -->
+                <div id="gold-purchase-section" style="margin-top:24px; width: 100%;">
+                    <div class="card glass-panel" id="gold-purchase-card" style="width: 100%;">
                         <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
                             <h3><i class="ph ph-scroll"></i> Chi tiết danh mục vàng đã mua</h3>
                             <div style="display:flex; gap:20px; align-items:center;">
@@ -357,8 +357,8 @@
                             </div>
                         </div>
                         
-                        <!-- Form nhập mua vàng: Chia 2 hàng cho thoáng (4 cột mỗi hàng) -->
-                        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:15px; margin-bottom:20px; padding:20px; background:rgba(0,0,0,0.02); border-radius:15px; border:1px solid var(--card-border);">
+                        <!-- Form nhập mua vàng: Tận dụng chiều rộng mới, dàn hàng ngang 5-6 cột -->
+                        <div id="gold-purchase-form-container" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:12px; margin-bottom:20px; padding:20px; background:rgba(0,0,0,0.02); border-radius:15px; border:1px solid var(--card-border);">
                             <input type="hidden" id="gold-purchase-edit-id">
                             
                             <div class="form-group" style="margin-bottom:0;">
@@ -366,16 +366,16 @@
                                 <div style="display:flex; gap:4px; position:relative;">
                                     <input type="text" id="gold-purchase-date-display" class="glass-input" placeholder="Ngày/Tháng/Năm" maxlength="10" style="flex:1;">
                                     <input type="date" id="gold-purchase-date" style="position:absolute; opacity:0; width:0; height:0; pointer-events:none;">
-                                    <button type="button" id="btn-open-gold-calendar" class="btn btn-secondary" style="padding:0 10px; height:42px; min-width:42px;">
-                                        <i class="ph ph-calendar-blank" style="font-size:20px;"></i>
+                                    <button type="button" id="btn-open-gold-calendar" class="btn btn-secondary" style="padding:0 8px; height:42px; min-width:40px;">
+                                        <i class="ph ph-calendar-blank" style="font-size:18px;"></i>
                                     </button>
                                 </div>
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
-                                <label style="font-size:12px; font-weight:600;"><i class="ph ph-coins"></i> Số lượng mua</label>
+                                <label style="font-size:12px; font-weight:600;"><i class="ph ph-coins"></i> Số lượng</label>
                                 <div style="display:flex; gap:4px;">
                                     <input type="number" id="gold-purchase-amount" class="glass-input" placeholder="0" step="0.01" style="flex:1;">
-                                    <select id="gold-purchase-unit" class="glass-input" style="width:80px;">
+                                    <select id="gold-purchase-unit" class="glass-input" style="width:70px; padding:4px;">
                                         <option value="chi">Chỉ</option>
                                         <option value="cay">Cây</option>
                                     </select>
@@ -383,30 +383,29 @@
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
                                 <label style="font-size:12px; font-weight:600;"><i class="ph ph-fingerprint"></i> Loại vàng</label>
-                                <input type="text" id="gold-purchase-type" class="glass-input" placeholder="Ví dụ: 9999, SJC...">
+                                <input type="text" id="gold-purchase-type" class="glass-input" placeholder="Loại...">
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
-                                <label style="font-size:12px; font-weight:600;"><i class="ph ph-money"></i> Số tiền (VND)</label>
-                                <input type="text" id="gold-purchase-cost" class="glass-input" placeholder="Nhập số tiền vốn...">
+                                <label style="font-size:12px; font-weight:600;"><i class="ph ph-money"></i> Tiền vốn (VND)</label>
+                                <input type="text" id="gold-purchase-cost" class="glass-input" placeholder="Giá mua...">
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
-                                <label style="font-size:12px; font-weight:600;"><i class="ph ph-storefront"></i> Tên tiệm vàng</label>
-                                <input type="text" id="gold-purchase-shop" class="glass-input" placeholder="Nhập tên tiệm...">
+                                <label style="font-size:12px; font-weight:600;"><i class="ph ph-storefront"></i> Tiệm vàng</label>
+                                <input type="text" id="gold-purchase-shop" class="glass-input" placeholder="Tên tiệm...">
                             </div>
-                            <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
-                                <label style="font-size:12px; font-weight:600;"><i class="ph ph-map-pin"></i> Địa chỉ / Ghi chú</label>
-                                <input type="text" id="gold-purchase-address" class="glass-input" placeholder="Địa chỉ hoặc ghi chú mua hàng...">
+                            <div class="form-group" style="margin-bottom:0; grid-column: span 1;">
+                                <label style="font-size:12px; font-weight:600;"><i class="ph ph-map-pin"></i> Địa chỉ/Ghi chú</label>
+                                <input type="text" id="gold-purchase-address" class="glass-input" placeholder="Địa chỉ...">
                             </div>
                             <div style="display:flex; align-items:flex-end;">
-                                <button id="btn-add-gold-purchase" class="btn btn-primary w-full" style="height:45px; font-weight:600;">
-                                    <i class="ph ph-plus-circle"></i> <span id="gold-purchase-btn-text">Thêm vào danh sách</span>
+                                <button id="btn-add-gold-purchase" class="btn btn-primary w-full" style="height:42px; font-weight:600; white-space:nowrap; justify-content:center;">
+                                    <i class="ph ph-plus-circle"></i> <span id="gold-purchase-btn-text">Thêm/Lưu</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Danh sách mua vàng dạng Transaction List (Giống Lịch sử giao dịch) -->
-                        <div id="gold-purchase-list" class="transaction-list" style="max-height: 400px; overflow-y: auto; padding-right: 10px;">
-                            <!-- Các bản ghi sẽ được render vào đây dưới dạng .transaction-item -->
+                        <!-- Danh sách mua vàng dạng Transaction List -->
+                        <div id="gold-purchase-list" class="transaction-list" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
                             <div style="text-align: center; padding: 40px; color: var(--text-muted);">
                                 <i class="ph ph-calendar-blank" style="font-size: 48px; opacity: 0.2; margin-bottom: 10px;"></i>
                                 <p>Chưa có dữ liệu mua vàng</p>

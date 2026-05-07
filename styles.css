@@ -309,9 +309,9 @@ h1, h2, h3, h4, h5, h6 {
     gap: 24px;
 }
 
-.col-span-3 { grid-column: span 3; }
-.col-span-2 { grid-column: span 2; }
-.col-span-1 { grid-column: span 1; }
+.col-span-3 { grid-column: span 3 / span 3; width: 100%; }
+.col-span-2 { grid-column: span 2 / span 2; }
+.col-span-1 { grid-column: span 1 / span 1; }
 .h-full { height: 100%; }
 .full-height { min-height: 60vh; }
 
