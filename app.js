@@ -115,9 +115,11 @@ const migrateState = (data) => {
             bankSavings: 0,
             lastGoldPrice: 0,
             isManualGold: true,
-            manualPrice: 0
+            manualPrice: 0,
+            goldPurchases: []
         };
     }
+    if (!data.assets.goldPurchases) data.assets.goldPurchases = [];
     
     // 4. Force update all DEFAULT_CATEGORIES exist and are updated
     ['income', 'expense', 'debt'].forEach(type => {
@@ -297,6 +299,18 @@ const els = {
     manualGoldInput: document.getElementById('manual-gold-price-input'),
     btnSaveGoldPrice: document.getElementById('btn-save-gold-price'),
     goldCalcBreakdown: document.getElementById('gold-calc-breakdown'),
+
+    // Gold Purchase Details
+    goldPurchaseAmount: document.getElementById('gold-purchase-amount'),
+    goldPurchaseUnit: document.getElementById('gold-purchase-unit'),
+    goldPurchaseType: document.getElementById('gold-purchase-type'),
+    goldPurchaseCost: document.getElementById('gold-purchase-cost'),
+    goldPurchaseShop: document.getElementById('gold-purchase-shop'),
+    goldPurchaseAddress: document.getElementById('gold-purchase-address'),
+    btnAddGoldPurchase: document.getElementById('btn-add-gold-purchase'),
+    goldPurchaseList: document.getElementById('gold-purchase-list'),
+    totalGoldCost: document.getElementById('total-gold-cost'),
+    goldProfitLoss: document.getElementById('gold-profit-loss'),
 
     // Merge Transactions
     btnMergeTransactions: document.getElementById('btn-merge-transactions'),
@@ -756,6 +770,21 @@ const setupEventListeners = () => {
             }
             renderAssets();
         });
+    }
+
+    if (els.goldPurchaseCost) {
+        els.goldPurchaseCost.addEventListener('input', function(e) {
+            let value = this.value.replace(/\D/g, '');
+            if (value === '') {
+                this.value = '';
+            } else {
+                this.value = new Intl.NumberFormat('vi-VN').format(value);
+            }
+        });
+    }
+
+    if (els.btnAddGoldPurchase) {
+        els.btnAddGoldPurchase.addEventListener('click', addGoldPurchase);
     }
 
     // Settings
@@ -1665,7 +1694,6 @@ const renderAssets = () => {
     els.assetBankBalance.textContent = formatCurrency(bankSavings);
     els.assetGoldValue.textContent = formatCurrency(goldValue);
 
-    // Populate inputs only ONCE on first load (using a flag)
     if (!renderAssets._inputsInitialized) {
         renderAssets._inputsInitialized = true;
         if (els.goldAmountInput) els.goldAmountInput.value = state.assets.goldAmount || '';
@@ -1677,7 +1705,116 @@ const renderAssets = () => {
             els.manualGoldInput.value = new Intl.NumberFormat('vi-VN').format(state.assets.manualPrice);
         }
     }
+
+    renderGoldPurchases();
 };
+
+const addGoldPurchase = () => {
+    const amt = parseFloat(els.goldPurchaseAmount.value) || 0;
+    const unit = els.goldPurchaseUnit.value;
+    const type = els.goldPurchaseType.value.trim();
+    const costStr = els.goldPurchaseCost.value.replace(/\D/g, '');
+    const cost = parseInt(costStr) || 0;
+    const shop = els.goldPurchaseShop.value.trim();
+    const address = els.goldPurchaseAddress.value.trim();
+
+    if (amt <= 0 || cost <= 0) {
+        alert('Vui lòng nhập số lượng và số tiền hợp lệ.');
+        return;
+    }
+
+    const purchase = {
+        id: Date.now(),
+        date: new Date().toISOString().split('T')[0],
+        amount: amt,
+        unit: unit,
+        type: type || 'Vàng',
+        cost: cost,
+        shop: shop || 'N/A',
+        address: address || 'N/A'
+    };
+
+    state.assets.goldPurchases.push(purchase);
+    saveData();
+    
+    // Clear inputs
+    els.goldPurchaseAmount.value = '';
+    els.goldPurchaseType.value = '';
+    els.goldPurchaseCost.value = '';
+    els.goldPurchaseShop.value = '';
+    els.goldPurchaseAddress.value = '';
+
+    renderAssets();
+    alert('Đã thêm bản ghi mua vàng!');
+};
+
+const deleteGoldPurchase = (id) => {
+    if (!confirm('Bạn có chắc chắn muốn xóa bản ghi này?')) return;
+    state.assets.goldPurchases = state.assets.goldPurchases.filter(p => p.id !== id);
+    saveData();
+    renderAssets();
+};
+
+const renderGoldPurchases = () => {
+    if (!els.goldPurchaseList) return;
+    
+    els.goldPurchaseList.innerHTML = '';
+    let totalCost = 0;
+
+    // Sort by date descending
+    const sorted = [...state.assets.goldPurchases].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    sorted.forEach(p => {
+        totalCost += p.cost;
+        const row = document.createElement('tr');
+        const unitName = p.unit === 'chi' ? 'Chỉ' : 'Cây';
+        row.innerHTML = `
+            <td>${new Date(p.date).toLocaleDateString('vi-VN')}</td>
+            <td><strong>${p.amount} ${unitName}</strong></td>
+            <td>${p.type}</td>
+            <td style="color:var(--danger); font-weight:600;">${formatCurrency(p.cost)}</td>
+            <td>${p.shop}</td>
+            <td style="font-size:11px; color:var(--text-muted);">${p.address}</td>
+            <td>
+                <button onclick="deleteGoldPurchase(${p.id})" class="btn btn-secondary small" style="padding:4px 8px; color:var(--danger);">
+                    <i class="ph ph-trash"></i>
+                </button>
+            </td>
+        `;
+        els.goldPurchaseList.appendChild(row);
+    });
+
+    if (els.totalGoldCost) {
+        els.totalGoldCost.textContent = formatCurrency(totalCost);
+    }
+
+    // Profit/Loss Calculation
+    if (els.goldProfitLoss) {
+        // We compare totalCost (investment) with the current goldValue (market value)
+        // goldValue is calculated in the main renderAssets function
+        
+        // Let's get the current market value of gold from the UI or recalculate
+        const goldAmtMarket = parseFloat(els.goldAmountInput?.value) || state.assets.goldAmount || 0;
+        const goldUnitMarket = els.goldUnitSelect?.value || state.assets.goldUnit || 'chi';
+        const manualPriceStr = els.manualGoldInput?.value.replace(/\D/g, '') || '';
+        const pricePerChiMarket = manualPriceStr ? parseInt(manualPriceStr) : (state.assets.manualPrice || 0);
+        
+        let totalGoldInChiMarket = 0;
+        if (goldUnitMarket === 'chi') totalGoldInChiMarket = goldAmtMarket;
+        else if (goldUnitMarket === 'cay') totalGoldInChiMarket = goldAmtMarket * 10;
+        else if (goldUnitMarket === 'phan') totalGoldInChiMarket = goldAmtMarket / 10;
+
+        const currentMarketValue = totalGoldInChiMarket * pricePerChiMarket;
+        const profit = currentMarketValue - totalCost;
+        
+        els.goldProfitLoss.textContent = (profit >= 0 ? '+' : '') + formatCurrency(profit);
+        els.goldProfitLoss.style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)';
+    }
+};
+
+// Expose to global window for onclick attributes
+window.deleteGoldPurchase = deleteGoldPurchase;
+window.addGoldPurchase = addGoldPurchase;
 
 // --- Chart.js Integration ---
 const renderCharts = () => {
