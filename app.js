@@ -1769,12 +1769,12 @@ const renderGoldPurchases = () => {
         const row = document.createElement('tr');
         const unitName = p.unit === 'chi' ? 'Chỉ' : 'Cây';
         row.innerHTML = `
-            <td>${new Date(p.date).toLocaleDateString('vi-VN')}</td>
             <td><strong>${p.amount} ${unitName}</strong></td>
             <td>${p.type}</td>
             <td style="color:var(--danger); font-weight:600;">${formatCurrency(p.cost)}</td>
             <td>${p.shop}</td>
             <td style="font-size:11px; color:var(--text-muted);">${p.address}</td>
+            <td>${new Date(p.date).toLocaleDateString('vi-VN')}</td>
             <td>
                 <button onclick="deleteGoldPurchase(${p.id})" class="btn btn-secondary small" style="padding:4px 8px; color:var(--danger);">
                     <i class="ph ph-trash"></i>
