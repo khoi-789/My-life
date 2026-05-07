@@ -820,6 +820,9 @@ input:checked + .debt-box {
     .report-filters .glass-input {
         width: 100% !important;
     }
+    #gold-purchase-card div[style*="display:grid"] {
+        grid-template-columns: 1fr !important;
+    }
 }
 
 /* Budget Progress Enhancements */
