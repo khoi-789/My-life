@@ -405,12 +405,24 @@
                             </div>
                         </div>
 
-                        <!-- Danh sách mua vàng dạng Transaction List -->
-                        <div id="gold-purchase-list" class="transaction-list" style="max-height: 500px; overflow-y: auto; padding-right: 10px;">
-                            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
-                                <i class="ph ph-calendar-blank" style="font-size: 48px; opacity: 0.2; margin-bottom: 10px;"></i>
-                                <p>Chưa có dữ liệu mua vàng</p>
-                            </div>
+                        <!-- Danh sách mua vàng dạng Bảng (Table) - Chiếm 100% chiều rộng -->
+                        <div class="table-responsive" style="margin-top: 10px; overflow-x: auto;">
+                            <table class="transaction-table" style="width: 100%; min-width: 1000px; border-collapse: collapse;">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align: left; padding: 12px; width: 100px;">Ngày mua</th>
+                                        <th style="text-align: left; padding: 12px; width: 120px;">Số lượng</th>
+                                        <th style="text-align: left; padding: 12px; width: 100px;">Loại vàng</th>
+                                        <th style="text-align: right; padding: 12px; width: 130px;">Tiền vốn</th>
+                                        <th style="text-align: left; padding: 12px; width: 150px;">Tiệm vàng</th>
+                                        <th style="text-align: left; padding: 12px;">Địa chỉ / Ghi chú</th>
+                                        <th style="text-align: center; padding: 12px; width: 100px;">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="gold-purchase-list">
+                                    <!-- Dữ liệu sẽ được đổ vào đây bằng JS -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

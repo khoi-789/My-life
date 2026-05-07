@@ -1865,10 +1865,12 @@ const renderGoldPurchases = () => {
 
     if (state.assets.goldPurchases.length === 0) {
         els.goldPurchaseList.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
-                <i class="ph ph-calendar-blank" style="font-size: 48px; opacity: 0.2; margin-bottom: 10px;"></i>
-                <p>Chưa có dữ liệu mua vàng</p>
-            </div>
+            <tr>
+                <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    <i class="ph ph-calendar-blank" style="font-size: 48px; opacity: 0.2; margin-bottom: 10px;"></i>
+                    <p>Chưa có dữ liệu mua vàng</p>
+                </td>
+            </tr>
         `;
         if (els.totalGoldCost) els.totalGoldCost.textContent = '0 ₫';
         return;
@@ -1879,42 +1881,30 @@ const renderGoldPurchases = () => {
 
     sorted.forEach(p => {
         totalCost += p.cost;
-        const item = document.createElement('div');
-        item.className = 'transaction-item';
-        item.style.padding = '12px 0';
+        const row = document.createElement('tr');
         
         const unitName = p.unit === 'chi' ? 'Chỉ' : 'Cây';
         const formattedDate = new Date(p.date).toLocaleDateString('vi-VN');
         
-        item.innerHTML = `
-            <div class="trans-left">
-                <div class="trans-icon expense" style="background:var(--primary-light); color:var(--primary);">
-                    <i class="ph-fill ph-sketch-logo"></i>
-                </div>
-                <div class="trans-details">
-                    <h4 style="font-size:16px;">${p.amount} ${unitName} - ${p.type}</h4>
-                    <span class="trans-date" style="font-size:12px;">
-                        <i class="ph ph-calendar"></i> ${formattedDate} • 
-                        <i class="ph ph-storefront"></i> ${p.shop} • 
-                        <i class="ph ph-map-pin"></i> ${p.address}
-                    </span>
-                </div>
-            </div>
-            <div class="trans-right" style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
-                <div class="trans-amount expense-text" style="font-size:16px; font-weight:700;">
-                    ${formatCurrency(p.cost)}
-                </div>
-                <div style="display:flex; gap:8px;">
-                    <button onclick="editGoldPurchase(${p.id})" class="btn btn-secondary small" title="Sửa" style="padding:4px 10px; color:var(--primary); background:var(--primary-light);">
-                        <i class="ph ph-pencil-simple"></i> Sửa
+        row.innerHTML = `
+            <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 13px;">${formattedDate}</td>
+            <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-weight: 600;">${p.amount} ${unitName}</td>
+            <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 13px;">${p.type}</td>
+            <td style="padding: 12px; border-bottom: 1px solid var(--card-border); text-align: right; color: var(--danger); font-weight: 600;">${formatCurrency(p.cost)}</td>
+            <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 13px;">${p.shop}</td>
+            <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 12px; color: var(--text-muted);">${p.address}</td>
+            <td style="padding: 12px; border-bottom: 1px solid var(--card-border); text-align: center;">
+                <div style="display:flex; gap:8px; justify-content: center;">
+                    <button onclick="editGoldPurchase(${p.id})" class="btn btn-secondary small" title="Sửa" style="padding:4px 8px; color:var(--primary); background:var(--primary-light);">
+                        <i class="ph ph-pencil-simple"></i>
                     </button>
-                    <button onclick="deleteGoldPurchase(${p.id})" class="btn btn-secondary small" title="Xóa" style="padding:4px 10px; color:var(--danger); background:var(--danger-bg);">
-                        <i class="ph ph-trash"></i> Xóa
+                    <button onclick="deleteGoldPurchase(${p.id})" class="btn btn-secondary small" title="Xóa" style="padding:4px 8px; color:var(--danger); background:var(--danger-bg);">
+                        <i class="ph ph-trash"></i>
                     </button>
                 </div>
-            </div>
+            </td>
         `;
-        els.goldPurchaseList.appendChild(item);
+        els.goldPurchaseList.appendChild(row);
     });
 
     if (els.totalGoldCost) {
