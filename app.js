@@ -65,7 +65,7 @@ let state = {
         goldUnit: 'chi',
         bankSavings: 0,
         lastGoldPrice: 0,
-        isManualGold: false,
+        isManualGold: true,
         manualPrice: 0
     }
 };
@@ -113,7 +113,9 @@ const migrateState = (data) => {
             goldAmount: 0,
             goldUnit: 'chi',
             bankSavings: 0,
-            lastGoldPrice: 0
+            lastGoldPrice: 0,
+            isManualGold: true,
+            manualPrice: 0
         };
     }
     
@@ -464,7 +466,6 @@ const init = async () => {
     renderUserAvatar();
     
     // Init Assets
-    fetchGoldPrice();
     renderAssets();
 };
 
@@ -1571,24 +1572,12 @@ const fetchGoldPrice = async () => {
 const renderAssets = () => {
     if (!els.totalAssetValue) return;
 
-    // Determine Gold Price per CHI
-    // If manual mode: use manualPrice (which is already per CHI as requested)
-    // If live mode: use currentGoldPriceBuy / 10 (since live price is per LUONG)
-    let pricePerChi = state.assets.isManualGold ? (state.assets.manualPrice || 0) : (currentGoldPriceBuy / 10);
-    if (pricePerChi === 0 && !state.assets.isManualGold) pricePerChi = currentGoldPriceBuy / 10;
+    // Manual mode is now the only mode
+    let pricePerChi = state.assets.manualPrice || 0;
 
-    // Update UI for manual mode
-    if (els.manualGoldGroup) els.manualGoldGroup.style.display = state.assets.isManualGold ? 'block' : 'none';
-    if (els.btnToggleManualGold) els.btnToggleManualGold.textContent = state.assets.isManualGold ? 'Dùng giá Live' : 'Nhập tay';
-    
     if (els.currentGoldPriceDisplay) {
-        if (state.assets.isManualGold) {
-            els.currentGoldPriceDisplay.textContent = formatCurrency(pricePerChi) + " / Chỉ";
-            els.currentGoldPriceDisplay.style.color = 'var(--secondary)';
-        } else {
-            els.currentGoldPriceDisplay.textContent = formatCurrency(currentGoldPriceBuy) + " / Lượng";
-            els.currentGoldPriceDisplay.style.color = 'var(--primary)';
-        }
+        els.currentGoldPriceDisplay.textContent = formatCurrency(pricePerChi) + " / Chỉ";
+        els.currentGoldPriceDisplay.style.color = 'var(--primary)';
     }
 
     // 1. App Accumulated Balance (Accumulated from previous months only, as requested)
