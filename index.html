@@ -301,11 +301,22 @@
                         </div>
                         <div class="gold-price-info" style="margin-top:16px; padding:15px; background:var(--primary-light); border-radius:15px; border: 1px solid var(--primary);">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                                <span style="font-size:12px; color:var(--text-muted);">Giá vàng SJC (Mua vào):</span>
+                                <span style="font-size:12px; color:var(--text-muted);">Giá vàng (Mua vào):</span>
                                 <span id="gold-status-tag" style="font-size:10px; padding:2px 6px; background:var(--success); color:white; border-radius:4px;">Live</span>
                             </div>
                             <div id="current-gold-price-display" style="font-size:18px; font-weight:700; color:var(--primary);">Đang cập nhật...</div>
-                            <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">Nguồn: vang.today</div>
+                            <div id="gold-calc-breakdown" style="font-size:11px; color:var(--text-muted); margin-top:8px; padding-top:8px; border-top:1px dashed rgba(0,0,0,0.1); display:none;"></div>
+                            
+                            <!-- Manual Price Input (Hidden by default) -->
+                            <div id="manual-gold-price-group" style="margin-top:12px; display:none;">
+                                <label style="font-size:11px; color:var(--primary); font-weight:600;">Nhập giá vàng thủ công (VND/Lượng):</label>
+                                <input type="text" id="manual-gold-price-input" class="glass-input small" placeholder="Ví dụ: 85.000.000">
+                            </div>
+                            
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                                <div style="font-size:10px; color:var(--text-muted);">Nguồn: <span id="gold-source-name">Đang tải...</span></div>
+                                <button id="btn-toggle-manual-gold" style="background:none; border:none; color:var(--primary); font-size:10px; text-decoration:underline; cursor:pointer;">Nhập tay</button>
+                            </div>
                         </div>
                     </div>
 
