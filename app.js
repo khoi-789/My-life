@@ -716,9 +716,14 @@ const setupEventListeners = () => {
             let value = this.value.replace(/\D/g, '');
             if (value === '') {
                 this.value = '';
-                return;
+            } else {
+                this.value = new Intl.NumberFormat('vi-VN').format(value);
             }
-            this.value = new Intl.NumberFormat('vi-VN').format(value);
+            
+            // Immediate UI update for preview
+            const manualPrice = parseInt(value) || 0;
+            state.assets.manualPrice = manualPrice;
+            renderAssets();
         });
     }
 
@@ -1566,18 +1571,22 @@ const fetchGoldPrice = async () => {
 const renderAssets = () => {
     if (!els.totalAssetValue) return;
 
-    // Use manual price if enabled, else use fetched price
-    const goldPriceToUse = state.assets.isManualGold ? (state.assets.manualPrice || currentGoldPriceBuy) : currentGoldPriceBuy;
+    // Determine Gold Price per CHI
+    // If manual mode: use manualPrice (which is already per CHI as requested)
+    // If live mode: use currentGoldPriceBuy / 10 (since live price is per LUONG)
+    let pricePerChi = state.assets.isManualGold ? (state.assets.manualPrice || 0) : (currentGoldPriceBuy / 10);
+    if (pricePerChi === 0 && !state.assets.isManualGold) pricePerChi = currentGoldPriceBuy / 10;
 
     // Update UI for manual mode
     if (els.manualGoldGroup) els.manualGoldGroup.style.display = state.assets.isManualGold ? 'block' : 'none';
     if (els.btnToggleManualGold) els.btnToggleManualGold.textContent = state.assets.isManualGold ? 'Dùng giá Live' : 'Nhập tay';
     
     if (els.currentGoldPriceDisplay) {
-        els.currentGoldPriceDisplay.textContent = formatCurrency(goldPriceToUse) + " / Lượng";
         if (state.assets.isManualGold) {
+            els.currentGoldPriceDisplay.textContent = formatCurrency(pricePerChi) + " / Chỉ";
             els.currentGoldPriceDisplay.style.color = 'var(--secondary)';
         } else {
+            els.currentGoldPriceDisplay.textContent = formatCurrency(currentGoldPriceBuy) + " / Lượng";
             els.currentGoldPriceDisplay.style.color = 'var(--primary)';
         }
     }
@@ -1608,24 +1617,21 @@ const renderAssets = () => {
     const appBalance = incomePrev - expensePrev;
 
     // 2. Gold Value
-    // 1 Lượng (Cây) = 10 Chỉ
-    // 1 Chỉ = 10 Phân
-    let totalGoldInLuong = 0;
-    if (state.assets.goldUnit === 'cay') totalGoldInLuong = state.assets.goldAmount;
-    else if (state.assets.goldUnit === 'chi') totalGoldInLuong = state.assets.goldAmount / 10;
-    else if (state.assets.goldUnit === 'phan') totalGoldInLuong = state.assets.goldAmount / 100;
+    let totalGoldInChi = 0;
+    if (state.assets.goldUnit === 'chi') totalGoldInChi = state.assets.goldAmount;
+    else if (state.assets.goldUnit === 'cay') totalGoldInChi = state.assets.goldAmount * 10;
+    else if (state.assets.goldUnit === 'phan') totalGoldInChi = state.assets.goldAmount / 10;
 
-    const goldValue = totalGoldInLuong * goldPriceToUse;
+    const goldValue = totalGoldInChi * pricePerChi;
 
     // Update breakdown info
     if (els.goldCalcBreakdown) {
         const unitName = state.assets.goldUnit === 'chi' ? 'Chỉ' : (state.assets.goldUnit === 'cay' ? 'Cây' : 'Phân');
-        const pricePerUnit = state.assets.goldUnit === 'chi' ? goldPriceToUse/10 : (state.assets.goldUnit === 'cay' ? goldPriceToUse : goldPriceToUse/100);
         
         els.goldCalcBreakdown.innerHTML = `
             <div>Chi tiết: <strong>${state.assets.goldAmount} ${unitName}</strong></div>
-            <div>Quy đổi: <strong>${totalGoldInLuong.toFixed(2)} Cây</strong></div>
-            <div>Giá 1 ${unitName}: <strong>${formatCurrency(pricePerUnit)}</strong></div>
+            <div>Quy đổi: <strong>${totalGoldInChi.toFixed(2)} Chỉ</strong></div>
+            <div>Giá 1 Chỉ: <strong>${formatCurrency(pricePerChi)}</strong></div>
             <div style="margin-top:4px; color:var(--primary); font-weight:600;">= ${formatCurrency(goldValue)}</div>
         `;
         els.goldCalcBreakdown.style.display = 'block';
