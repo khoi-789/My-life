@@ -58,7 +58,14 @@ const isTransactionPositive = (t) => {
 let state = {
     transactions: [],
     budgets: {},
-    categories: null
+    categories: null,
+    userAvatar: null,
+    assets: {
+        goldAmount: 0,
+        goldUnit: 'chi',
+        bankSavings: 0,
+        lastGoldPrice: 0
+    }
 };
 
 // Initial data if empty
@@ -98,7 +105,17 @@ const migrateState = (data) => {
         data.categories.expense = data.categories.expense.filter(c => c.id !== 'exp_family');
     }
     
-    // 2. Ensure all DEFAULT_CATEGORIES exist and are updated
+    // 3. Initialize Assets if missing
+    if (!data.assets) {
+        data.assets = {
+            goldAmount: 0,
+            goldUnit: 'chi',
+            bankSavings: 0,
+            lastGoldPrice: 0
+        };
+    }
+    
+    // 4. Force update all DEFAULT_CATEGORIES exist and are updated
     ['income', 'expense', 'debt'].forEach(type => {
         DEFAULT_CATEGORIES[type].forEach(defCat => {
             let cat = data.categories[type].find(c => c.id === defCat.id);
@@ -256,6 +273,17 @@ const els = {
     filterCategory: document.getElementById('filter-category'),
     filterSearch: document.getElementById('filter-search'),
     
+    // Assets
+    goldAmountInput: document.getElementById('gold-amount'),
+    goldUnitSelect: document.getElementById('gold-unit'),
+    bankSavingsInput: document.getElementById('bank-savings-input'),
+    btnSaveAssets: document.getElementById('btn-save-assets'),
+    currentGoldPriceDisplay: document.getElementById('current-gold-price-display'),
+    totalAssetValue: document.getElementById('total-asset-value'),
+    assetAppBalance: document.getElementById('asset-app-balance'),
+    assetBankBalance: document.getElementById('asset-bank-balance'),
+    assetGoldValue: document.getElementById('asset-gold-value'),
+
     // Merge Transactions
     btnMergeTransactions: document.getElementById('btn-merge-transactions'),
     selectAllTransactions: document.getElementById('selectAll-transactions'),
@@ -425,6 +453,10 @@ const init = async () => {
     // Init settings
     renderSettings();
     renderUserAvatar();
+    
+    // Init Assets
+    fetchGoldPrice();
+    renderAssets();
 };
 
 const renderUserAvatar = () => {
@@ -636,6 +668,38 @@ const setupEventListeners = () => {
     }
     if(els.filterSearch) {
         els.filterSearch.addEventListener('input', renderFullTransactionsTable);
+    }
+
+    // Asset Management
+    if (els.btnSaveAssets) {
+        els.btnSaveAssets.addEventListener('click', () => {
+            const goldAmt = parseFloat(els.goldAmountInput.value) || 0;
+            const goldUnit = els.goldUnitSelect.value;
+            const bankSavStr = els.bankSavingsInput.value.replace(/\D/g, '');
+            const bankSav = parseInt(bankSavStr) || 0;
+
+            state.assets = {
+                ...state.assets,
+                goldAmount: goldAmt,
+                goldUnit: goldUnit,
+                bankSavings: bankSav
+            };
+
+            saveData();
+            renderAssets();
+            alert('Đã cập nhật thông tin tài sản!');
+        });
+    }
+
+    if (els.bankSavingsInput) {
+        els.bankSavingsInput.addEventListener('input', function(e) {
+            let value = this.value.replace(/\D/g, '');
+            if (value === '') {
+                this.value = '';
+                return;
+            }
+            this.value = new Intl.NumberFormat('vi-VN').format(value);
+        });
     }
 
     // Settings
@@ -1431,6 +1495,85 @@ const renderFullTransactionsTable = () => {
         `;
         els.transactionsBody.insertAdjacentHTML('beforeend', html);
     });
+};
+
+// --- Assets Management ---
+let currentGoldPriceBuy = 75000000; // Default fallback
+
+const fetchGoldPrice = async () => {
+    try {
+        // Using a reliable public API for VN Gold Prices
+        const response = await fetch('https://giavang.now/api/prices');
+        const data = await response.json();
+        
+        // Find SJC TP.HCM (Common benchmark)
+        const sjc = data.find(p => p.type.toLowerCase().includes('sjc') && p.city.toLowerCase().includes('hồ chí minh'));
+        if (sjc && sjc.buy) {
+            // API returns like "75.00" or "75,000,000"
+            const rawBuy = sjc.buy.replace(/[^0-9]/g, '');
+            let buyVal = parseInt(rawBuy);
+            // If API returns in millions (e.g. 7500 for 75,000,000)
+            if (buyVal < 100000) buyVal *= 10000;
+            
+            currentGoldPriceBuy = buyVal;
+            state.assets.lastGoldPrice = buyVal;
+            if(els.currentGoldPriceDisplay) {
+                els.currentGoldPriceDisplay.textContent = formatCurrency(buyVal) + " / Lượng";
+            }
+        }
+    } catch (e) {
+        console.warn("Gold price sync failed:", e);
+        if(els.currentGoldPriceDisplay) {
+            els.currentGoldPriceDisplay.innerHTML = `<span style="color:var(--danger-color)">Lỗi cập nhật.</span> <small>Giá tạm tính: ${formatCurrency(currentGoldPriceBuy)}</small>`;
+        }
+    }
+    renderAssets();
+};
+
+const renderAssets = () => {
+    if (!els.totalAssetValue) return;
+
+    // 1. App Accumulated Balance
+    let appBalance = 0;
+    state.transactions.forEach(t => {
+        if (t.type === 'income') appBalance += t.amount;
+        else if (t.type === 'expense') appBalance -= t.amount;
+        else if (t.type === 'debt') {
+            if (t.categoryId === 'debt_borrow' || t.categoryId === 'debt_recover') appBalance += t.amount;
+            else appBalance -= t.amount;
+        }
+    });
+
+    // 2. Gold Value
+    // 1 Lượng (Cây) = 10 Chỉ
+    // 1 Chỉ = 10 Phân
+    let totalGoldInLuong = 0;
+    if (state.assets.goldUnit === 'cay') totalGoldInLuong = state.assets.goldAmount;
+    else if (state.assets.goldUnit === 'chi') totalGoldInLuong = state.assets.goldAmount / 10;
+    else if (state.assets.goldUnit === 'phan') totalGoldInLuong = state.assets.goldAmount / 100;
+
+    const goldValue = totalGoldInLuong * currentGoldPriceBuy;
+
+    // 3. Bank Savings
+    const bankSavings = state.assets.bankSavings || 0;
+
+    // 4. Grand Total
+    const totalAsset = appBalance + bankSavings + goldValue;
+
+    // Update UI
+    els.totalAssetValue.textContent = formatCurrency(totalAsset);
+    els.assetAppBalance.textContent = formatCurrency(appBalance);
+    els.assetBankBalance.textContent = formatCurrency(bankSavings);
+    els.assetGoldValue.textContent = formatCurrency(goldValue);
+
+    // Populate inputs if they are empty
+    if (els.goldAmountInput && !els.goldAmountInput.value && state.assets.goldAmount > 0) {
+        els.goldAmountInput.value = state.assets.goldAmount;
+        els.goldUnitSelect.value = state.assets.goldUnit;
+    }
+    if (els.bankSavingsInput && !els.bankSavingsInput.value && state.assets.bankSavings > 0) {
+        els.bankSavingsInput.value = new Intl.NumberFormat('vi-VN').format(state.assets.bankSavings);
+    }
 };
 
 // --- Chart.js Integration ---
