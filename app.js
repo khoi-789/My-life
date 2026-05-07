@@ -1502,23 +1502,26 @@ let currentGoldPriceBuy = 75000000; // Default fallback
 
 const fetchGoldPrice = async () => {
     try {
-        // Using a reliable public API for VN Gold Prices
         const response = await fetch('https://giavang.now/api/prices');
         const data = await response.json();
         
-        // Find SJC TP.HCM (Common benchmark)
-        const sjc = data.find(p => p.type.toLowerCase().includes('sjc') && p.city.toLowerCase().includes('hồ chí minh'));
-        if (sjc && sjc.buy) {
-            // API returns like "75.00" or "75,000,000"
-            const rawBuy = sjc.buy.replace(/[^0-9]/g, '');
+        // Try to find Ngọc Thẩm (NTJ) or SJC TP.HCM
+        let goldData = data.find(p => p.type.toLowerCase().includes('ngọc thẩm') || p.type.toLowerCase().includes('ntj'));
+        
+        if (!goldData) {
+            goldData = data.find(p => p.type.toLowerCase().includes('sjc') && p.city.toLowerCase().includes('hồ chí minh'));
+        }
+
+        if (goldData && goldData.buy) {
+            const rawBuy = goldData.buy.replace(/[^0-9]/g, '');
             let buyVal = parseInt(rawBuy);
-            // If API returns in millions (e.g. 7500 for 75,000,000)
             if (buyVal < 100000) buyVal *= 10000;
             
             currentGoldPriceBuy = buyVal;
             state.assets.lastGoldPrice = buyVal;
             if(els.currentGoldPriceDisplay) {
-                els.currentGoldPriceDisplay.textContent = formatCurrency(buyVal) + " / Lượng";
+                const brandName = goldData.type.includes('SJC') ? 'SJC' : 'Ngọc Thẩm';
+                els.currentGoldPriceDisplay.textContent = `${formatCurrency(buyVal)} / Lượng (${brandName})`;
             }
         }
     } catch (e) {
@@ -1533,16 +1536,30 @@ const fetchGoldPrice = async () => {
 const renderAssets = () => {
     if (!els.totalAssetValue) return;
 
-    // 1. App Accumulated Balance
-    let appBalance = 0;
+    // 1. App Accumulated Balance (Accumulated from previous months only, as requested)
+    let incomePrev = 0;
+    let expensePrev = 0;
+
+    const now = new Date();
+    const curMonth = now.getMonth();
+    const curYear = now.getFullYear();
+    const firstOfCurrentMonth = new Date(curYear, curMonth, 1);
+
     state.transactions.forEach(t => {
-        if (t.type === 'income') appBalance += t.amount;
-        else if (t.type === 'expense') appBalance -= t.amount;
-        else if (t.type === 'debt') {
-            if (t.categoryId === 'debt_borrow' || t.categoryId === 'debt_recover') appBalance += t.amount;
-            else appBalance -= t.amount;
+        const d = new Date(t.date);
+        if (d < firstOfCurrentMonth) {
+            if (t.type === 'income') {
+                incomePrev += t.amount;
+            } else if (t.type === 'expense') {
+                expensePrev += t.amount;
+            } else if (t.type === 'debt') {
+                if (t.categoryId === 'debt_borrow' || t.categoryId === 'debt_recover') incomePrev += t.amount;
+                else expensePrev += t.amount;
+            }
         }
     });
+
+    const appBalance = incomePrev - expensePrev;
 
     // 2. Gold Value
     // 1 Lượng (Cây) = 10 Chỉ
