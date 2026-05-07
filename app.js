@@ -1707,6 +1707,7 @@ const renderAssets = () => {
         if (els.manualGoldInput && state.assets.manualPrice > 0) {
             els.manualGoldInput.value = new Intl.NumberFormat('vi-VN').format(state.assets.manualPrice);
         }
+        resetGoldPurchaseForm();
     }
 
     renderGoldPurchases();
