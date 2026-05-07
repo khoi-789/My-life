@@ -1389,6 +1389,10 @@ const renderFullTransactionsTable = () => {
                         <tbody>`;
             
             t.subItems.forEach(sub => {
+                // Only show sub-items that match the search text if a search is active
+                const subMatches = filterSearchText === '' || sub.note.toLowerCase().includes(filterSearchText);
+                if (!subMatches) return;
+
                 const subCat = getCategoryById(t.type, sub.categoryId || t.categoryId);
                 subItemsHtml += `
                             <tr style="border-bottom: 1px dashed rgba(0,0,0,0.05);">
