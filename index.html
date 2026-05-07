@@ -398,24 +398,13 @@
                             </div>
                         </div>
 
-                        <!-- Bảng danh sách -->
-                        <div class="table-responsive">
-                            <table class="transaction-table" style="min-width: 900px;">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 110px;">Ngày mua</th>
-                                        <th>Số lượng</th>
-                                        <th>Loại vàng</th>
-                                        <th>Tiền vốn</th>
-                                        <th>Tiệm vàng</th>
-                                        <th>Địa chỉ</th>
-                                        <th style="width: 100px;">Thao tác</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="gold-purchase-list">
-                                    <!-- Data will be rendered here -->
-                                </tbody>
-                            </table>
+                        <!-- Danh sách mua vàng dạng Transaction List (Giống Lịch sử giao dịch) -->
+                        <div id="gold-purchase-list" class="transaction-list" style="max-height: 400px; overflow-y: auto; padding-right: 10px;">
+                            <!-- Các bản ghi sẽ được render vào đây dưới dạng .transaction-item -->
+                            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                                <i class="ph ph-calendar-blank" style="font-size: 48px; opacity: 0.2; margin-bottom: 10px;"></i>
+                                <p>Chưa có dữ liệu mua vàng</p>
+                            </div>
                         </div>
                     </div>
                 </div>
