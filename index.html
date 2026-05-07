@@ -310,7 +310,10 @@
                             <!-- Manual Price Input -->
                             <div id="manual-gold-price-group" style="margin-top:12px;">
                                 <label style="font-size:11px; color:var(--primary); font-weight:600;">Nhập giá vàng (VND/Chỉ):</label>
-                                <input type="text" id="manual-gold-price-input" class="glass-input small" placeholder="Ví dụ: 7.500.000">
+                                <div style="display:flex; gap:8px;">
+                                    <input type="text" id="manual-gold-price-input" class="glass-input small" placeholder="Ví dụ: 7.500.000" style="flex:1;">
+                                    <button id="btn-save-gold-price" class="btn btn-primary" style="padding: 0 12px; height: 38px; font-size: 12px; border-radius: 8px;"><i class="ph ph-floppy-disk"></i> Lưu giá</button>
+                                </div>
                             </div>
                         </div>
                     </div>

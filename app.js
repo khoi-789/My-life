@@ -291,8 +291,7 @@ const els = {
     // Gold Manual
     manualGoldGroup: document.getElementById('manual-gold-price-group'),
     manualGoldInput: document.getElementById('manual-gold-price-input'),
-    btnToggleManualGold: document.getElementById('btn-toggle-manual-gold'),
-    goldSourceName: document.getElementById('gold-source-name'),
+    btnSaveGoldPrice: document.getElementById('btn-save-gold-price'),
     goldCalcBreakdown: document.getElementById('gold-calc-breakdown'),
 
     // Merge Transactions
@@ -720,11 +719,22 @@ const setupEventListeners = () => {
             } else {
                 this.value = new Intl.NumberFormat('vi-VN').format(value);
             }
-            
-            // Immediate UI update for preview
-            const manualPrice = parseInt(value) || 0;
-            state.assets.manualPrice = manualPrice;
-            renderAssets();
+        });
+    }
+
+    if (els.btnSaveGoldPrice) {
+        els.btnSaveGoldPrice.addEventListener('click', () => {
+            const val = els.manualGoldInput.value.replace(/\D/g, '');
+            const price = parseInt(val) || 0;
+            if (price > 0) {
+                state.assets.manualPrice = price;
+                state.assets.isManualGold = true;
+                saveData();
+                renderAssets();
+                alert('Đã lưu giá vàng mới!');
+            } else {
+                alert('Vui lòng nhập giá vàng hợp lệ.');
+            }
         });
     }
 
