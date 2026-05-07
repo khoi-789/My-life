@@ -279,14 +279,15 @@ const els = {
     
     // Assets
     goldAmountInput: document.getElementById('gold-amount'),
-    goldUnitSelect: document.getElementById('gold-unit'),
-    bankSavingsInput: document.getElementById('bank-savings-input'),
-    btnSaveAssets: document.getElementById('btn-save-assets'),
-    currentGoldPriceDisplay: document.getElementById('current-gold-price-display'),
     totalAssetValue: document.getElementById('total-asset-value'),
     assetAppBalance: document.getElementById('asset-app-balance'),
     assetBankBalance: document.getElementById('asset-bank-balance'),
     assetGoldValue: document.getElementById('asset-gold-value'),
+    
+    // Asset Save Buttons
+    btnSaveGoldAmount: document.getElementById('btn-save-gold-amount'),
+    btnSaveBankSavings: document.getElementById('btn-save-bank-savings'),
+    btnSaveAssets: document.getElementById('btn-save-assets'), // Legacy support if needed
     
     // Gold Manual
     manualGoldGroup: document.getElementById('manual-gold-price-group'),
@@ -678,47 +679,31 @@ const setupEventListeners = () => {
     if(els.filterSearch) {
         els.filterSearch.addEventListener('input', renderFullTransactionsTable);
     }
-
-    // Asset Management
-    if (els.btnSaveAssets) {
-        els.btnSaveAssets.addEventListener('click', () => {
+    
+    if (els.btnSaveGoldAmount) {
+        els.btnSaveGoldAmount.addEventListener('click', () => {
             const goldAmt = parseFloat(els.goldAmountInput.value) || 0;
             const goldUnit = els.goldUnitSelect.value;
-            const bankSavStr = els.bankSavingsInput.value.replace(/\D/g, '');
-            const bankSav = parseInt(bankSavStr) || 0;
             
-            const manualPriceStr = els.manualGoldInput.value.replace(/\D/g, '');
-            const manualPrice = parseInt(manualPriceStr) || 0;
-
-            state.assets = {
-                ...state.assets,
-                goldAmount: goldAmt,
-                goldUnit: goldUnit,
-                bankSavings: bankSav,
-                manualPrice: manualPrice
-            };
+            state.assets.goldAmount = goldAmt;
+            state.assets.goldUnit = goldUnit;
 
             saveData();
             renderAssets();
-            alert('Đã cập nhật thông tin tài sản!');
+            alert('Đã lưu số lượng vàng mới!');
         });
     }
 
-    if (els.btnToggleManualGold) {
-        els.btnToggleManualGold.addEventListener('click', () => {
-            state.assets.isManualGold = !state.assets.isManualGold;
+    if (els.btnSaveBankSavings) {
+        els.btnSaveBankSavings.addEventListener('click', () => {
+            const bankSavStr = els.bankSavingsInput.value.replace(/\D/g, '');
+            const bankSav = parseInt(bankSavStr) || 0;
+
+            state.assets.bankSavings = bankSav;
+
+            saveData();
             renderAssets();
-        });
-    }
-
-    if (els.manualGoldInput) {
-        els.manualGoldInput.addEventListener('input', function(e) {
-            let value = this.value.replace(/\D/g, '');
-            if (value === '') {
-                this.value = '';
-            } else {
-                this.value = new Intl.NumberFormat('vi-VN').format(value);
-            }
+            alert('Đã lưu số dư ngân hàng mới!');
         });
     }
 
@@ -1253,6 +1238,39 @@ const renderGuide = () => {
 const renderSettings = () => {
     if(!els.budgetSettingsContainer) return;
     els.budgetSettingsContainer.innerHTML = '';
+    
+    // --- Asset Settings ---
+    const assetSettings = `
+        <div class="glass-panel" style="padding: 20px; margin-bottom: 20px;">
+            <h3 style="margin-top:0;"><i class="ph ph-shield-check"></i> Quản lý tài sản</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="form-group">
+                    <label><i class="ph ph-bank"></i> Tiền mặt / Tiền ngân hàng</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="bank-savings-input" class="glass-input" placeholder="Nhập số tiền..." style="flex:1;">
+                        <button id="btn-save-bank-savings" class="btn btn-primary" style="padding: 0 12px; height: 42px; font-size: 12px; border-radius: 8px;"><i class="ph ph-floppy-disk"></i> Lưu</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="ph ph-coins"></i> Số lượng vàng đang giữ</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="number" id="gold-amount" class="glass-input" placeholder="0" step="0.01" style="flex:1;">
+                        <select id="gold-unit" class="glass-input" style="width:100px;">
+                            <option value="chi">Chỉ</option>
+                            <option value="cay">Cây (Lượng)</option>
+                            <option value="phan">Phân</option>
+                        </select>
+                        <button id="btn-save-gold-amount" class="btn btn-primary" style="padding: 0 12px; height: 42px; font-size: 12px; border-radius: 8px;"><i class="ph ph-floppy-disk"></i> Lưu</button>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:24px;">
+                <p style="font-size:12px; color:var(--text-muted); font-style:italic; line-height:1.5;">* Nhập số dư hiện có và nhấn Lưu để hệ thống tự động cộng vào tổng tài sản.</p>
+            </div>
+        </div>
+    `;
+    els.budgetSettingsContainer.insertAdjacentHTML('beforeend', assetSettings);
+
     state.categories.expense.forEach(cat => {
         const val = state.budgets ? state.budgets[cat.id] : 0;
         const html = `
