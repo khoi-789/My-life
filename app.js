@@ -1665,16 +1665,17 @@ const renderAssets = () => {
     els.assetBankBalance.textContent = formatCurrency(bankSavings);
     els.assetGoldValue.textContent = formatCurrency(goldValue);
 
-    // Populate inputs if they are empty
-    if (els.goldAmountInput && !els.goldAmountInput.value && state.assets.goldAmount > 0) {
-        els.goldAmountInput.value = state.assets.goldAmount;
-        els.goldUnitSelect.value = state.assets.goldUnit;
-    }
-    if (els.bankSavingsInput && !els.bankSavingsInput.value && state.assets.bankSavings > 0) {
-        els.bankSavingsInput.value = new Intl.NumberFormat('vi-VN').format(state.assets.bankSavings);
-    }
-    if (els.manualGoldInput && !els.manualGoldInput.value && state.assets.manualPrice > 0) {
-        els.manualGoldInput.value = new Intl.NumberFormat('vi-VN').format(state.assets.manualPrice);
+    // Populate inputs only ONCE on first load (using a flag)
+    if (!renderAssets._inputsInitialized) {
+        renderAssets._inputsInitialized = true;
+        if (els.goldAmountInput) els.goldAmountInput.value = state.assets.goldAmount || '';
+        if (els.goldUnitSelect) els.goldUnitSelect.value = state.assets.goldUnit || 'chi';
+        if (els.bankSavingsInput && state.assets.bankSavings > 0) {
+            els.bankSavingsInput.value = new Intl.NumberFormat('vi-VN').format(state.assets.bankSavings);
+        }
+        if (els.manualGoldInput && state.assets.manualPrice > 0) {
+            els.manualGoldInput.value = new Intl.NumberFormat('vi-VN').format(state.assets.manualPrice);
+        }
     }
 };
 

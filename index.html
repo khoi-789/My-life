@@ -255,19 +255,21 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Reports Tab Content -->
             <!-- ... existing reports tab ... -->
-            
+
             <!-- Assets Tab -->
             <div class="tab-content" id="tab-assets">
                 <div class="dashboard-grid h-full">
+
+                    <!-- Card 1: Tổng tài sản -->
                     <div class="card glass-panel col-span-1">
                         <div class="card-header">
                             <h3>Tổng tài sản hiện có</h3>
                         </div>
-                        <div class="total-asset-value" id="total-asset-value" style="font-size: 2.2rem; font-weight: 700; color: var(--primary); margin: 20px 0;">0 ₫</div>
-                        <div class="asset-breakdown" style="display:flex; flex-direction:column; gap:12px; border-top: 1px solid rgba(0,0,0,0.05); padding-top:16px;">
+                        <div class="total-asset-value" id="total-asset-value" style="font-size:2.2rem; font-weight:700; color:var(--primary); margin:20px 0;">0 ₫</div>
+                        <div class="asset-breakdown" style="display:flex; flex-direction:column; gap:12px; border-top:1px solid rgba(0,0,0,0.05); padding-top:16px;">
                             <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <span style="color:var(--text-muted);">Tích lũy (từ các tháng trước):</span>
                                 <strong id="asset-app-balance" style="color:var(--success);">0 ₫</strong>
@@ -281,65 +283,65 @@
                                 <strong id="asset-gold-value" style="color:#b45309;">0 ₫</strong>
                             </div>
                         </div>
-                        <p style="font-size:12px; color:var(--text-muted); margin-top:20px; font-style:italic;">* Tổng tài sản = Tiền app + Tiền NH + Vàng (theo giá thị trường)</p>
+                        <p style="font-size:12px; color:var(--text-muted); margin-top:20px; font-style:italic;">* Tổng = Tích lũy + Tiền NH + Vàng quy đổi</p>
                     </div>
 
+                    <!-- Card 2: Quản lý Vàng -->
                     <div class="card glass-panel col-span-1">
                         <div class="card-header">
                             <h3>Quản lý Vàng</h3>
                         </div>
+
+                        <!-- Số lượng vàng -->
                         <div class="form-group">
                             <label><i class="ph ph-coins"></i> Số lượng vàng đang giữ</label>
-                            <div style="display:flex; gap:8px;">
-                                <input type="number" id="gold-amount" class="glass-input" placeholder="0" step="0.01" style="flex:1;">
-                                <select id="gold-unit" class="glass-input" style="width:100px;">
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <input type="number" id="gold-amount" class="glass-input" placeholder="0" step="0.01" min="0" style="flex:1;">
+                                <select id="gold-unit" class="glass-input" style="width:110px;">
                                     <option value="chi">Chỉ</option>
                                     <option value="cay">Cây (Lượng)</option>
                                     <option value="phan">Phân</option>
                                 </select>
-                                <button id="btn-save-gold-amount" class="btn btn-primary" style="padding: 0 12px; height: 42px; font-size: 12px; border-radius: 8px;"><i class="ph ph-floppy-disk"></i> Lưu</button>
+                                <button id="btn-save-gold-amount" class="btn btn-primary" style="padding:0 14px; height:42px; font-size:12px; white-space:nowrap; flex-shrink:0;">
+                                    <i class="ph ph-floppy-disk"></i> Lưu
+                                </button>
                             </div>
                         </div>
-                        <div class="gold-price-info" style="margin-top:16px; padding:15px; background:var(--primary-light); border-radius:15px; border: 1px solid var(--primary);">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                                <span style="font-size:12px; color:var(--text-muted);">Giá vàng hiện tại:</span>
-                                <span id="gold-status-tag" style="font-size:10px; padding:2px 6px; background:var(--primary); color:white; border-radius:4px;">Tự quản lý</span>
-                            </div>
-                            <div id="current-gold-price-display" style="font-size:18px; font-weight:700; color:var(--primary);">0 ₫ / Chỉ</div>
-                            <div id="gold-calc-breakdown" style="font-size:11px; color:var(--text-muted); margin-top:8px; padding-top:8px; border-top:1px dashed rgba(0,0,0,0.1);"></div>
-                            
-                            <!-- Manual Price Input -->
-                            <div id="manual-gold-price-group" style="margin-top:12px;">
-                                <label style="font-size:11px; color:var(--primary); font-weight:600;">Nhập giá vàng (VND/Chỉ):</label>
-                                <div style="display:flex; gap:8px;">
-                                    <input type="text" id="manual-gold-price-input" class="glass-input small" placeholder="Ví dụ: 7.500.000" style="flex:1;">
-                                    <button id="btn-save-gold-price" class="btn btn-primary" style="padding: 0 12px; height: 38px; font-size: 12px; border-radius: 8px;"><i class="ph ph-floppy-disk"></i> Lưu giá</button>
-                                </div>
+
+                        <!-- Giá vàng -->
+                        <div class="form-group" style="margin-top:20px;">
+                            <label style="color:var(--primary); font-weight:600;"><i class="ph ph-tag"></i> Giá vàng (VND / Chỉ)</label>
+                            <div style="display:flex; gap:8px; align-items:center;">
+                                <input type="text" id="manual-gold-price-input" class="glass-input" placeholder="Ví dụ: 7.500.000" style="flex:1;">
+                                <button id="btn-save-gold-price" class="btn btn-primary" style="padding:0 14px; height:42px; font-size:12px; white-space:nowrap; flex-shrink:0;">
+                                    <i class="ph ph-floppy-disk"></i> Lưu giá
+                                </button>
                             </div>
                         </div>
+
+                        <!-- Kết quả quy đổi -->
+                        <div id="gold-calc-breakdown" style="margin-top:16px; padding:14px; background:var(--primary-light); border-radius:12px; border:1px solid var(--primary); font-size:13px; line-height:1.8; display:none;"></div>
                     </div>
 
+                    <!-- Card 3: Ngân hàng -->
                     <div class="card glass-panel col-span-1">
                         <div class="card-header">
-                            <h3>Ngân hàng & Lưu trữ</h3>
+                            <h3>Ngân hàng &amp; Lưu trữ</h3>
                         </div>
                         <div class="form-group">
                             <label><i class="ph ph-bank"></i> Tiền mặt / Tiền ngân hàng</label>
-                            <div style="display:flex; gap:8px;">
+                            <div style="display:flex; gap:8px; align-items:center;">
                                 <input type="text" id="bank-savings-input" class="glass-input" placeholder="Nhập số tiền..." style="flex:1;">
-                                <button id="btn-save-bank-savings" class="btn btn-primary" style="padding: 0 12px; height: 42px; font-size: 12px; border-radius: 8px;"><i class="ph ph-floppy-disk"></i> Lưu</button>
+                                <button id="btn-save-bank-savings" class="btn btn-primary" style="padding:0 14px; height:42px; font-size:12px; white-space:nowrap; flex-shrink:0;">
+                                    <i class="ph ph-floppy-disk"></i> Lưu
+                                </button>
                             </div>
                         </div>
-                        <div style="margin-top:24px;">
-                            <p style="font-size:12px; color:var(--text-muted); font-style:italic; line-height:1.5;">* Nhập số dư hiện có và nhấn Lưu để hệ thống tự động cộng vào tổng tài sản.</p>
-                        </div>
-                        <div style="margin-top:24px;">
-                            <button class="btn btn-primary w-full" id="btn-save-assets">
-                                <i class="ph ph-check-circle"></i> Cập nhật tài sản
-                            </button>
-                        </div>
-                        <p style="font-size:11px; color:var(--text-muted); margin-top:12px; text-align:center;">Dữ liệu sẽ được lưu trữ an toàn trên đám mây.</p>
+                        <p style="font-size:12px; color:var(--text-muted); font-style:italic; margin-top:16px; line-height:1.6;">
+                            * Nhập số dư hiện có rồi nhấn <strong>Lưu</strong>.<br>Dữ liệu được lưu trữ an toàn trên đám mây.
+                        </p>
                     </div>
+
                 </div>
             </div>
 
