@@ -307,6 +307,9 @@ const els = {
     goldPurchaseCost: document.getElementById('gold-purchase-cost'),
     goldPurchaseShop: document.getElementById('gold-purchase-shop'),
     goldPurchaseAddress: document.getElementById('gold-purchase-address'),
+    goldPurchaseDate: document.getElementById('gold-purchase-date'),
+    goldPurchaseEditId: document.getElementById('gold-purchase-edit-id'),
+    goldPurchaseBtnText: document.getElementById('gold-purchase-btn-text'),
     btnAddGoldPurchase: document.getElementById('btn-add-gold-purchase'),
     goldPurchaseList: document.getElementById('gold-purchase-list'),
     totalGoldCost: document.getElementById('total-gold-cost'),
@@ -1710,6 +1713,8 @@ const renderAssets = () => {
 };
 
 const addGoldPurchase = () => {
+    const editId = els.goldPurchaseEditId.value;
+    const date = els.goldPurchaseDate.value || new Date().toISOString().split('T')[0];
     const amt = parseFloat(els.goldPurchaseAmount.value) || 0;
     const unit = els.goldPurchaseUnit.value;
     const type = els.goldPurchaseType.value.trim();
@@ -1723,29 +1728,66 @@ const addGoldPurchase = () => {
         return;
     }
 
-    const purchase = {
-        id: Date.now(),
-        date: new Date().toISOString().split('T')[0],
-        amount: amt,
-        unit: unit,
-        type: type || 'Vàng',
-        cost: cost,
-        shop: shop || 'N/A',
-        address: address || 'N/A'
-    };
+    if (editId) {
+        // Update existing
+        const index = state.assets.goldPurchases.findIndex(p => p.id == editId);
+        if (index !== -1) {
+            state.assets.goldPurchases[index] = {
+                ...state.assets.goldPurchases[index],
+                date, amount: amt, unit, type: type || 'Vàng', cost, shop: shop || 'N/A', address: address || 'N/A'
+            };
+            alert('Đã cập nhật bản ghi!');
+        }
+    } else {
+        // Add new
+        const purchase = {
+            id: Date.now(),
+            date,
+            amount: amt,
+            unit,
+            type: type || 'Vàng',
+            cost,
+            shop: shop || 'N/A',
+            address: address || 'N/A'
+        };
+        state.assets.goldPurchases.push(purchase);
+        alert('Đã thêm bản ghi mua vàng!');
+    }
 
-    state.assets.goldPurchases.push(purchase);
     saveData();
     
-    // Clear inputs
+    // Reset Form
+    resetGoldPurchaseForm();
+    renderAssets();
+};
+
+const resetGoldPurchaseForm = () => {
+    els.goldPurchaseEditId.value = '';
+    els.goldPurchaseDate.value = new Date().toISOString().split('T')[0];
     els.goldPurchaseAmount.value = '';
     els.goldPurchaseType.value = '';
     els.goldPurchaseCost.value = '';
     els.goldPurchaseShop.value = '';
     els.goldPurchaseAddress.value = '';
+    els.goldPurchaseBtnText.textContent = 'Thêm vào danh sách';
+};
 
-    renderAssets();
-    alert('Đã thêm bản ghi mua vàng!');
+const editGoldPurchase = (id) => {
+    const purchase = state.assets.goldPurchases.find(p => p.id == id);
+    if (!purchase) return;
+
+    els.goldPurchaseEditId.value = purchase.id;
+    els.goldPurchaseDate.value = purchase.date;
+    els.goldPurchaseAmount.value = purchase.amount;
+    els.goldPurchaseUnit.value = purchase.unit;
+    els.goldPurchaseType.value = purchase.type;
+    els.goldPurchaseCost.value = new Intl.NumberFormat('vi-VN').format(purchase.cost);
+    els.goldPurchaseShop.value = purchase.shop;
+    els.goldPurchaseAddress.value = purchase.address;
+    els.goldPurchaseBtnText.textContent = 'Cập nhật bản ghi';
+    
+    // Scroll to form
+    els.goldPurchaseAmount.scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
 
 const deleteGoldPurchase = (id) => {
@@ -1769,16 +1811,21 @@ const renderGoldPurchases = () => {
         const row = document.createElement('tr');
         const unitName = p.unit === 'chi' ? 'Chỉ' : 'Cây';
         row.innerHTML = `
+            <td>${new Date(p.date).toLocaleDateString('vi-VN')}</td>
             <td><strong>${p.amount} ${unitName}</strong></td>
             <td>${p.type}</td>
             <td style="color:var(--danger); font-weight:600;">${formatCurrency(p.cost)}</td>
             <td>${p.shop}</td>
             <td style="font-size:11px; color:var(--text-muted);">${p.address}</td>
-            <td>${new Date(p.date).toLocaleDateString('vi-VN')}</td>
             <td>
-                <button onclick="deleteGoldPurchase(${p.id})" class="btn btn-secondary small" style="padding:4px 8px; color:var(--danger);">
-                    <i class="ph ph-trash"></i>
-                </button>
+                <div style="display:flex; gap:8px;">
+                    <button onclick="editGoldPurchase(${p.id})" class="btn btn-secondary small" style="padding:4px 8px; color:var(--primary);">
+                        <i class="ph ph-pencil-simple"></i>
+                    </button>
+                    <button onclick="deleteGoldPurchase(${p.id})" class="btn btn-secondary small" style="padding:4px 8px; color:var(--danger);">
+                        <i class="ph ph-trash"></i>
+                    </button>
+                </div>
             </td>
         `;
         els.goldPurchaseList.appendChild(row);
@@ -1815,6 +1862,7 @@ const renderGoldPurchases = () => {
 // Expose to global window for onclick attributes
 window.deleteGoldPurchase = deleteGoldPurchase;
 window.addGoldPurchase = addGoldPurchase;
+window.editGoldPurchase = editGoldPurchase;
 
 // --- Chart.js Integration ---
 const renderCharts = () => {

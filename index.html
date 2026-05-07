@@ -357,53 +357,59 @@
                             </div>
                         </div>
                         
-                        <!-- Form nhập mua vàng: Dàn hàng ngang 6 cột -->
-                        <div style="display:grid; grid-template-columns: repeat(6, 1fr); gap:10px; margin-bottom:20px; padding:15px; background:rgba(0,0,0,0.02); border-radius:12px;">
+                        <!-- Form nhập mua vàng: Chia 2 hàng cho thoáng (4 cột mỗi hàng) -->
+                        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:15px; margin-bottom:20px; padding:20px; background:rgba(0,0,0,0.02); border-radius:15px; border:1px solid var(--card-border);">
+                            <input type="hidden" id="gold-purchase-edit-id">
+                            
                             <div class="form-group" style="margin-bottom:0;">
-                                <label style="font-size:11px;">Số lượng mua</label>
+                                <label style="font-size:12px; font-weight:600;"><i class="ph ph-calendar"></i> Ngày mua</label>
+                                <input type="date" id="gold-purchase-date" class="glass-input">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size:12px; font-weight:600;"><i class="ph ph-coins"></i> Số lượng mua</label>
                                 <div style="display:flex; gap:4px;">
-                                    <input type="number" id="gold-purchase-amount" class="glass-input small" placeholder="0" step="0.01" style="flex:1;">
-                                    <select id="gold-purchase-unit" class="glass-input small" style="width:70px; padding:4px 8px;">
+                                    <input type="number" id="gold-purchase-amount" class="glass-input" placeholder="0" step="0.01" style="flex:1;">
+                                    <select id="gold-purchase-unit" class="glass-input" style="width:80px;">
                                         <option value="chi">Chỉ</option>
                                         <option value="cay">Cây</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
-                                <label style="font-size:11px;">Loại vàng</label>
-                                <input type="text" id="gold-purchase-type" class="glass-input small" placeholder="Vàng 9999...">
+                                <label style="font-size:12px; font-weight:600;"><i class="ph ph-fingerprint"></i> Loại vàng</label>
+                                <input type="text" id="gold-purchase-type" class="glass-input" placeholder="Ví dụ: 9999, SJC...">
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
-                                <label style="font-size:11px;">Số tiền mua (VND)</label>
-                                <input type="text" id="gold-purchase-cost" class="glass-input small" placeholder="Số tiền...">
+                                <label style="font-size:12px; font-weight:600;"><i class="ph ph-money"></i> Số tiền (VND)</label>
+                                <input type="text" id="gold-purchase-cost" class="glass-input" placeholder="Nhập số tiền vốn...">
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
-                                <label style="font-size:11px;">Tên tiệm vàng</label>
-                                <input type="text" id="gold-purchase-shop" class="glass-input small" placeholder="Tiệm vàng...">
+                                <label style="font-size:12px; font-weight:600;"><i class="ph ph-storefront"></i> Tên tiệm vàng</label>
+                                <input type="text" id="gold-purchase-shop" class="glass-input" placeholder="Nhập tên tiệm...">
                             </div>
-                            <div class="form-group" style="margin-bottom:0;">
-                                <label style="font-size:11px;">Địa chỉ / Ghi chú</label>
-                                <input type="text" id="gold-purchase-address" class="glass-input small" placeholder="Địa chỉ...">
+                            <div class="form-group" style="grid-column: span 2; margin-bottom:0;">
+                                <label style="font-size:12px; font-weight:600;"><i class="ph ph-map-pin"></i> Địa chỉ / Ghi chú</label>
+                                <input type="text" id="gold-purchase-address" class="glass-input" placeholder="Địa chỉ hoặc ghi chú mua hàng...">
                             </div>
                             <div style="display:flex; align-items:flex-end;">
-                                <button id="btn-add-gold-purchase" class="btn btn-primary btn-block" style="height:38px; font-size:12px; justify-content:center; width:100%;">
-                                    <i class="ph ph-plus"></i> Thêm vào danh sách
+                                <button id="btn-add-gold-purchase" class="btn btn-primary w-full" style="height:45px; font-weight:600;">
+                                    <i class="ph ph-plus-circle"></i> <span id="gold-purchase-btn-text">Thêm vào danh sách</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Bảng danh sách: Số lượng -> Loại vàng -> Số tiền -> Tiệm -> Địa chỉ -> Ngày mua -->
+                        <!-- Bảng danh sách -->
                         <div class="table-responsive">
                             <table class="transaction-table" style="min-width: 900px;">
                                 <thead>
                                     <tr>
+                                        <th style="width: 110px;">Ngày mua</th>
                                         <th>Số lượng</th>
                                         <th>Loại vàng</th>
-                                        <th>Số tiền (Vốn)</th>
+                                        <th>Tiền vốn</th>
                                         <th>Tiệm vàng</th>
                                         <th>Địa chỉ</th>
-                                        <th style="width: 110px;">Ngày mua</th>
-                                        <th style="width: 60px;">Xóa</th>
+                                        <th style="width: 100px;">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody id="gold-purchase-list">
