@@ -64,7 +64,9 @@ let state = {
         goldAmount: 0,
         goldUnit: 'chi',
         bankSavings: 0,
-        lastGoldPrice: 0
+        lastGoldPrice: 0,
+        isManualGold: false,
+        manualPrice: 0
     }
 };
 
@@ -283,6 +285,13 @@ const els = {
     assetAppBalance: document.getElementById('asset-app-balance'),
     assetBankBalance: document.getElementById('asset-bank-balance'),
     assetGoldValue: document.getElementById('asset-gold-value'),
+    
+    // Gold Manual
+    manualGoldGroup: document.getElementById('manual-gold-price-group'),
+    manualGoldInput: document.getElementById('manual-gold-price-input'),
+    btnToggleManualGold: document.getElementById('btn-toggle-manual-gold'),
+    goldSourceName: document.getElementById('gold-source-name'),
+    goldCalcBreakdown: document.getElementById('gold-calc-breakdown'),
 
     // Merge Transactions
     btnMergeTransactions: document.getElementById('btn-merge-transactions'),
@@ -677,17 +686,39 @@ const setupEventListeners = () => {
             const goldUnit = els.goldUnitSelect.value;
             const bankSavStr = els.bankSavingsInput.value.replace(/\D/g, '');
             const bankSav = parseInt(bankSavStr) || 0;
+            
+            const manualPriceStr = els.manualGoldInput.value.replace(/\D/g, '');
+            const manualPrice = parseInt(manualPriceStr) || 0;
 
             state.assets = {
                 ...state.assets,
                 goldAmount: goldAmt,
                 goldUnit: goldUnit,
-                bankSavings: bankSav
+                bankSavings: bankSav,
+                manualPrice: manualPrice
             };
 
             saveData();
             renderAssets();
             alert('Đã cập nhật thông tin tài sản!');
+        });
+    }
+
+    if (els.btnToggleManualGold) {
+        els.btnToggleManualGold.addEventListener('click', () => {
+            state.assets.isManualGold = !state.assets.isManualGold;
+            renderAssets();
+        });
+    }
+
+    if (els.manualGoldInput) {
+        els.manualGoldInput.addEventListener('input', function(e) {
+            let value = this.value.replace(/\D/g, '');
+            if (value === '') {
+                this.value = '';
+                return;
+            }
+            this.value = new Intl.NumberFormat('vi-VN').format(value);
         });
     }
 
@@ -1519,22 +1550,37 @@ const fetchGoldPrice = async () => {
             
             currentGoldPriceBuy = buyVal;
             state.assets.lastGoldPrice = buyVal;
-            if(els.currentGoldPriceDisplay) {
+            
+            if(els.goldSourceName) {
                 const brandName = goldData.type.includes('SJC') ? 'SJC' : 'Ngọc Thẩm';
-                els.currentGoldPriceDisplay.textContent = `${formatCurrency(buyVal)} / Lượng (${brandName})`;
+                els.goldSourceName.textContent = brandName;
             }
         }
     } catch (e) {
         console.warn("Gold price sync failed:", e);
-        if(els.currentGoldPriceDisplay) {
-            els.currentGoldPriceDisplay.innerHTML = `<span style="color:var(--danger-color)">Lỗi cập nhật.</span> <small>Giá tạm tính: ${formatCurrency(currentGoldPriceBuy)}</small>`;
-        }
+        if(els.goldSourceName) els.goldSourceName.textContent = "SJC (Tạm tính)";
     }
     renderAssets();
 };
 
 const renderAssets = () => {
     if (!els.totalAssetValue) return;
+
+    // Use manual price if enabled, else use fetched price
+    const goldPriceToUse = state.assets.isManualGold ? (state.assets.manualPrice || currentGoldPriceBuy) : currentGoldPriceBuy;
+
+    // Update UI for manual mode
+    if (els.manualGoldGroup) els.manualGoldGroup.style.display = state.assets.isManualGold ? 'block' : 'none';
+    if (els.btnToggleManualGold) els.btnToggleManualGold.textContent = state.assets.isManualGold ? 'Dùng giá Live' : 'Nhập tay';
+    
+    if (els.currentGoldPriceDisplay) {
+        els.currentGoldPriceDisplay.textContent = formatCurrency(goldPriceToUse) + " / Lượng";
+        if (state.assets.isManualGold) {
+            els.currentGoldPriceDisplay.style.color = 'var(--secondary)';
+        } else {
+            els.currentGoldPriceDisplay.style.color = 'var(--primary)';
+        }
+    }
 
     // 1. App Accumulated Balance (Accumulated from previous months only, as requested)
     let incomePrev = 0;
@@ -1569,7 +1615,21 @@ const renderAssets = () => {
     else if (state.assets.goldUnit === 'chi') totalGoldInLuong = state.assets.goldAmount / 10;
     else if (state.assets.goldUnit === 'phan') totalGoldInLuong = state.assets.goldAmount / 100;
 
-    const goldValue = totalGoldInLuong * currentGoldPriceBuy;
+    const goldValue = totalGoldInLuong * goldPriceToUse;
+
+    // Update breakdown info
+    if (els.goldCalcBreakdown) {
+        const unitName = state.assets.goldUnit === 'chi' ? 'Chỉ' : (state.assets.goldUnit === 'cay' ? 'Cây' : 'Phân');
+        const pricePerUnit = state.assets.goldUnit === 'chi' ? goldPriceToUse/10 : (state.assets.goldUnit === 'cay' ? goldPriceToUse : goldPriceToUse/100);
+        
+        els.goldCalcBreakdown.innerHTML = `
+            <div>Chi tiết: <strong>${state.assets.goldAmount} ${unitName}</strong></div>
+            <div>Quy đổi: <strong>${totalGoldInLuong.toFixed(2)} Cây</strong></div>
+            <div>Giá 1 ${unitName}: <strong>${formatCurrency(pricePerUnit)}</strong></div>
+            <div style="margin-top:4px; color:var(--primary); font-weight:600;">= ${formatCurrency(goldValue)}</div>
+        `;
+        els.goldCalcBreakdown.style.display = 'block';
+    }
 
     // 3. Bank Savings
     const bankSavings = state.assets.bankSavings || 0;
@@ -1590,6 +1650,9 @@ const renderAssets = () => {
     }
     if (els.bankSavingsInput && !els.bankSavingsInput.value && state.assets.bankSavings > 0) {
         els.bankSavingsInput.value = new Intl.NumberFormat('vi-VN').format(state.assets.bankSavings);
+    }
+    if (els.manualGoldInput && !els.manualGoldInput.value && state.assets.manualPrice > 0) {
+        els.manualGoldInput.value = new Intl.NumberFormat('vi-VN').format(state.assets.manualPrice);
     }
 };
 
