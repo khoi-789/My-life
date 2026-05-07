@@ -363,7 +363,13 @@
                             
                             <div class="form-group" style="margin-bottom:0;">
                                 <label style="font-size:12px; font-weight:600;"><i class="ph ph-calendar"></i> Ngày mua</label>
-                                <input type="date" id="gold-purchase-date" class="glass-input">
+                                <div style="display:flex; gap:4px; position:relative;">
+                                    <input type="text" id="gold-purchase-date-display" class="glass-input" placeholder="Ngày/Tháng/Năm" maxlength="10" style="flex:1;">
+                                    <input type="date" id="gold-purchase-date" style="position:absolute; opacity:0; width:0; height:0; pointer-events:none;">
+                                    <button type="button" id="btn-open-gold-calendar" class="btn btn-secondary" style="padding:0 10px; height:42px; min-width:42px;">
+                                        <i class="ph ph-calendar-blank" style="font-size:20px;"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="form-group" style="margin-bottom:0;">
                                 <label style="font-size:12px; font-weight:600;"><i class="ph ph-coins"></i> Số lượng mua</label>

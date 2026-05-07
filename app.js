@@ -308,6 +308,8 @@ const els = {
     goldPurchaseShop: document.getElementById('gold-purchase-shop'),
     goldPurchaseAddress: document.getElementById('gold-purchase-address'),
     goldPurchaseDate: document.getElementById('gold-purchase-date'),
+    goldPurchaseDateDisplay: document.getElementById('gold-purchase-date-display'),
+    btnOpenGoldCalendar: document.getElementById('btn-open-gold-calendar'),
     goldPurchaseEditId: document.getElementById('gold-purchase-edit-id'),
     goldPurchaseBtnText: document.getElementById('gold-purchase-btn-text'),
     btnAddGoldPurchase: document.getElementById('btn-add-gold-purchase'),
@@ -788,6 +790,42 @@ const setupEventListeners = () => {
 
     if (els.btnAddGoldPurchase) {
         els.btnAddGoldPurchase.addEventListener('click', addGoldPurchase);
+    }
+
+    if (els.btnOpenGoldCalendar) {
+        els.btnOpenGoldCalendar.addEventListener('click', () => {
+            els.goldPurchaseDate.showPicker();
+        });
+    }
+
+    if (els.goldPurchaseDate) {
+        els.goldPurchaseDate.addEventListener('change', function() {
+            if (this.value) {
+                const [y, m, d] = this.value.split('-');
+                els.goldPurchaseDateDisplay.value = `${d}/${m}/${y}`;
+            }
+        });
+    }
+
+    if (els.goldPurchaseDateDisplay) {
+        els.goldPurchaseDateDisplay.addEventListener('input', function(e) {
+            let v = this.value.replace(/\D/g, '');
+            if (v.length > 8) v = v.slice(0, 8);
+            
+            let formatted = v;
+            if (v.length > 2) formatted = v.slice(0, 2) + '/' + v.slice(2);
+            if (v.length > 4) formatted = v.slice(0, 2) + '/' + v.slice(2, 4) + '/' + v.slice(4);
+            
+            this.value = formatted;
+
+            // Try to sync back to hidden date input if valid length
+            if (v.length === 8) {
+                const d = v.slice(0, 2);
+                const m = v.slice(2, 4);
+                const y = v.slice(4);
+                els.goldPurchaseDate.value = `${y}-${m}-${d}`;
+            }
+        });
     }
 
     // Settings
@@ -1715,7 +1753,21 @@ const renderAssets = () => {
 
 const addGoldPurchase = () => {
     const editId = els.goldPurchaseEditId.value;
-    const date = els.goldPurchaseDate.value || new Date().toISOString().split('T')[0];
+    
+    // Get date from display or hidden
+    let date = els.goldPurchaseDate.value;
+    const displayVal = els.goldPurchaseDateDisplay.value;
+    
+    if (displayVal && displayVal.length === 10) {
+        const [d, m, y] = displayVal.split('/');
+        date = `${y}-${m}-${d}`;
+    }
+
+    if (!date || date.split('-').length !== 3) {
+        alert('Vui lòng nhập ngày hợp lệ (Ngày/Tháng/Năm).');
+        return;
+    }
+
     const amt = parseFloat(els.goldPurchaseAmount.value) || 0;
     const unit = els.goldPurchaseUnit.value;
     const type = els.goldPurchaseType.value.trim();
@@ -1763,8 +1815,12 @@ const addGoldPurchase = () => {
 };
 
 const resetGoldPurchaseForm = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const [y, m, d] = today.split('-');
+    
     els.goldPurchaseEditId.value = '';
-    els.goldPurchaseDate.value = new Date().toISOString().split('T')[0];
+    els.goldPurchaseDate.value = today;
+    els.goldPurchaseDateDisplay.value = `${d}/${m}/${y}`;
     els.goldPurchaseAmount.value = '';
     els.goldPurchaseType.value = '';
     els.goldPurchaseCost.value = '';
@@ -1777,8 +1833,11 @@ const editGoldPurchase = (id) => {
     const purchase = state.assets.goldPurchases.find(p => p.id == id);
     if (!purchase) return;
 
+    const [y, m, d] = purchase.date.split('-');
+
     els.goldPurchaseEditId.value = purchase.id;
     els.goldPurchaseDate.value = purchase.date;
+    els.goldPurchaseDateDisplay.value = `${d}/${m}/${y}`;
     els.goldPurchaseAmount.value = purchase.amount;
     els.goldPurchaseUnit.value = purchase.unit;
     els.goldPurchaseType.value = purchase.type;
