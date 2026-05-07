@@ -1352,8 +1352,10 @@ const renderFullTransactionsTable = () => {
         const matchMonth = filterMo === 'all' || Math.floor(filterMo) === (tDate.getMonth() + 1);
         const matchDay = filterDa === 'all' || Math.floor(filterDa) === tDate.getDate();
 
-        // Search Match
-        const matchSearch = filterSearchText === '' || t.note.toLowerCase().includes(filterSearchText);
+        // Search Match: Check parent note OR any sub-item note
+        const noteMatch = t.note.toLowerCase().includes(filterSearchText);
+        const subItemsMatch = t.subItems && t.subItems.some(sub => sub.note.toLowerCase().includes(filterSearchText));
+        const matchSearch = filterSearchText === '' || noteMatch || subItemsMatch;
 
         return matchYear && matchMonth && matchDay && matchSearch;
     });
@@ -1374,10 +1376,14 @@ const renderFullTransactionsTable = () => {
         let subItemsHtml = '';
         let toggleBtn = '';
         
+        // Auto-expand if a sub-item matches the search term
+        const subItemMatchesSearch = filterSearchText !== '' && t.subItems && t.subItems.some(sub => sub.note.toLowerCase().includes(filterSearchText));
+        const isExpanded = subItemMatchesSearch;
+
         if (t.subItems && t.subItems.length > 0) {
-            toggleBtn = `<button class="icon-btn" onclick="toggleSubItems('${t.id}')" style="margin-right:8px; font-size:12px; color:var(--text-muted); padding:4px;"><i class="ph ph-caret-down" id="caret-${t.id}"></i></button>`;
+            toggleBtn = `<button class="icon-btn" onclick="toggleSubItems('${t.id}')" style="margin-right:8px; font-size:12px; color:var(--text-muted); padding:4px;"><i class="ph ${isExpanded ? 'ph-caret-up' : 'ph-caret-down'}" id="caret-${t.id}"></i></button>`;
             
-            subItemsHtml = `<tr id="sub-${t.id}" style="display:none; background: rgba(0,0,0,0.015);">
+            subItemsHtml = `<tr id="sub-${t.id}" style="display:${isExpanded ? 'table-row' : 'none'}; background: rgba(0,0,0,0.015);">
                 <td colspan="5" style="padding:0;">
                     <table style="width:100%; border-collapse: collapse;">
                         <tbody>`;
