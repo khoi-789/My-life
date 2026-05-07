@@ -723,14 +723,35 @@ const setupEventListeners = () => {
         });
     }
 
+    if (els.manualGoldInput) {
+        els.manualGoldInput.addEventListener('input', function(e) {
+            let value = this.value.replace(/\D/g, '');
+            if (value === '') {
+                this.value = '';
+            } else {
+                this.value = new Intl.NumberFormat('vi-VN').format(value);
+            }
+            renderAssets();
+        });
+    }
+
+    if (els.goldAmountInput) {
+        els.goldAmountInput.addEventListener('input', renderAssets);
+    }
+
+    if (els.goldUnitSelect) {
+        els.goldUnitSelect.addEventListener('change', renderAssets);
+    }
+
     if (els.bankSavingsInput) {
         els.bankSavingsInput.addEventListener('input', function(e) {
             let value = this.value.replace(/\D/g, '');
             if (value === '') {
                 this.value = '';
-                return;
+            } else {
+                this.value = new Intl.NumberFormat('vi-VN').format(value);
             }
-            this.value = new Intl.NumberFormat('vi-VN').format(value);
+            renderAssets();
         });
     }
 
@@ -1600,8 +1621,15 @@ const fetchGoldPrice = async () => {
 const renderAssets = () => {
     if (!els.totalAssetValue) return;
 
-    // Manual mode is now the only mode
-    let pricePerChi = state.assets.manualPrice || 0;
+    // Get current input values for real-time preview (or use state if empty)
+    const goldAmt = parseFloat(els.goldAmountInput?.value) || state.assets.goldAmount || 0;
+    const goldUnit = els.goldUnitSelect?.value || state.assets.goldUnit || 'chi';
+    
+    const bankSavStr = els.bankSavingsInput?.value.replace(/\D/g, '') || '';
+    const bankSavings = bankSavStr ? parseInt(bankSavStr) : (state.assets.bankSavings || 0);
+
+    const manualPriceStr = els.manualGoldInput?.value.replace(/\D/g, '') || '';
+    const pricePerChi = manualPriceStr ? parseInt(manualPriceStr) : (state.assets.manualPrice || 0);
 
     if (els.currentGoldPriceDisplay) {
         els.currentGoldPriceDisplay.textContent = formatCurrency(pricePerChi) + " / Chỉ";
@@ -1635,18 +1663,18 @@ const renderAssets = () => {
 
     // 2. Gold Value
     let totalGoldInChi = 0;
-    if (state.assets.goldUnit === 'chi') totalGoldInChi = state.assets.goldAmount;
-    else if (state.assets.goldUnit === 'cay') totalGoldInChi = state.assets.goldAmount * 10;
-    else if (state.assets.goldUnit === 'phan') totalGoldInChi = state.assets.goldAmount / 10;
+    if (goldUnit === 'chi') totalGoldInChi = goldAmt;
+    else if (goldUnit === 'cay') totalGoldInChi = goldAmt * 10;
+    else if (goldUnit === 'phan') totalGoldInChi = goldAmt / 10;
 
     const goldValue = totalGoldInChi * pricePerChi;
 
     // Update breakdown info
     if (els.goldCalcBreakdown) {
-        const unitName = state.assets.goldUnit === 'chi' ? 'Chỉ' : (state.assets.goldUnit === 'cay' ? 'Cây' : 'Phân');
+        const unitName = goldUnit === 'chi' ? 'Chỉ' : (goldUnit === 'cay' ? 'Cây' : 'Phân');
         
         els.goldCalcBreakdown.innerHTML = `
-            <div>Chi tiết: <strong>${state.assets.goldAmount} ${unitName}</strong></div>
+            <div>Chi tiết: <strong>${goldAmt} ${unitName}</strong></div>
             <div>Quy đổi: <strong>${totalGoldInChi.toFixed(2)} Chỉ</strong></div>
             <div>Giá 1 Chỉ: <strong>${formatCurrency(pricePerChi)}</strong></div>
             <div style="margin-top:4px; color:var(--primary); font-weight:600;">= ${formatCurrency(goldValue)}</div>
@@ -1654,8 +1682,8 @@ const renderAssets = () => {
         els.goldCalcBreakdown.style.display = 'block';
     }
 
-    // 3. Bank Savings
-    const bankSavings = state.assets.bankSavings || 0;
+    // 3. Bank Savings (already determined above)
+    // const bankSavings = ...
 
     // 4. Grand Total
     const totalAsset = appBalance + bankSavings + goldValue;
