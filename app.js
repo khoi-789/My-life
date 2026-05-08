@@ -1919,7 +1919,11 @@ const renderGoldPurchases = () => {
         const formattedDate = new Date(p.date).toLocaleDateString('vi-VN');
         const unitPriceDisplay = p.unitPrice ? formatCurrency(p.unitPrice) : 'N/A';
         
+        // Trạng thái checkbox (nếu có thể lưu vào state thì tốt, tạm thời mặc định bỏ tick)
         row.innerHTML = `
+            <td style="padding: 12px; border-bottom: 1px solid var(--card-border); text-align: center;">
+                <input type="checkbox" class="gold-row-checkbox" data-amount="${p.amount}" data-unit="${p.unit}" style="width:18px; height:18px; cursor:pointer;">
+            </td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 13px;">${formattedDate}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-weight: 600;">${p.amount} ${unitName}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); text-align: right; color: var(--text-muted); font-size: 13px;">${unitPriceDisplay}</td>
@@ -1942,9 +1946,39 @@ const renderGoldPurchases = () => {
         els.goldPurchaseList.appendChild(row);
     });
 
+    // Thêm sự kiện cho các checkbox mới tạo
+    const checkboxes = els.goldPurchaseList.querySelectorAll('.gold-row-checkbox');
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateGoldAmountFromTicks);
+    });
+
     if (els.totalGoldCost) {
         els.totalGoldCost.textContent = formatCurrency(totalCost);
     }
+};
+
+// Hàm mới: Tính toán số lượng vàng từ các ô đã tick
+const updateGoldAmountFromTicks = () => {
+    const checkboxes = els.goldPurchaseList.querySelectorAll('.gold-row-checkbox:checked');
+    let totalInChi = 0;
+
+    checkboxes.forEach(cb => {
+        const amt = parseFloat(cb.dataset.amount) || 0;
+        const unit = cb.dataset.unit;
+        // Quy đổi tất cả về Chỉ để cộng (1 Cây = 10 Chỉ)
+        totalInChi += (unit === 'cay' ? amt * 10 : amt);
+    });
+
+    // Lấy đơn vị hiện tại của ô "Số lượng vàng đang giữ" để quy đổi ngược lại
+    const targetUnit = els.goldUnit.value;
+    const finalAmount = (targetUnit === 'cay' ? totalInChi / 10 : totalInChi);
+
+    // Điền vào ô input
+    els.goldAmount.value = finalAmount > 0 ? finalAmount.toFixed(3).replace(/\.?0+$/, '') : 0;
+    
+    // Gọi hàm tính toán lại các giá trị quy đổi (giá trị vàng, tổng tài sản...)
+    if (typeof calculateGoldValue === 'function') calculateGoldValue();
+};
 
     // Profit/Loss Calculation
     if (els.goldProfitLoss) {
