@@ -1891,10 +1891,12 @@ const renderGoldPurchases = () => {
         
         const unitName = p.unit === 'chi' ? 'Chỉ' : 'Cây';
         const formattedDate = new Date(p.date).toLocaleDateString('vi-VN');
+        const unitPrice = p.amount > 0 ? (p.cost / p.amount) : 0;
         
         row.innerHTML = `
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 13px;">${formattedDate}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-weight: 600;">${p.amount} ${unitName}</td>
+            <td style="padding: 12px; border-bottom: 1px solid var(--card-border); text-align: right; color: var(--text-muted); font-size: 13px;">${formatCurrency(unitPrice)}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 13px;">${p.type}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); text-align: right; color: var(--danger); font-weight: 600;">${formatCurrency(p.cost)}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 13px;">${p.shop}</td>
