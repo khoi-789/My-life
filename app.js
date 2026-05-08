@@ -1984,18 +1984,23 @@ const updateGoldAmountFromTicks = () => {
     checkboxes.forEach(cb => {
         const amt = parseFloat(cb.dataset.amount) || 0;
         const unit = cb.dataset.unit;
+        // Quy đổi tất cả về Chỉ để cộng (1 Cây = 10 Chỉ)
         totalInChi += (unit === 'cay' ? amt * 10 : amt);
     });
 
-    // Sử dụng đúng tên biến đã khai báo trong els
+    // Lấy đơn vị hiện tại của ô "Số lượng vàng đang giữ" để quy đổi ngược lại
     const targetUnit = els.goldUnitSelect.value;
     const finalAmount = (targetUnit === 'cay' ? totalInChi / 10 : totalInChi);
 
     // Điền vào ô input (Vẫn cho phép người dùng sửa tay sau đó)
-    els.goldAmountInput.value = finalAmount > 0 ? finalAmount.toFixed(3).replace(/\.?0+$/, '') : 0;
+    if (els.goldAmountInput) {
+        els.goldAmountInput.value = finalAmount > 0 ? finalAmount.toFixed(3).replace(/\.?0+$/, '') : 0;
+    }
     
-    // Gọi hàm tính toán lại giá trị vàng quy đổi
-    if (typeof calculateGoldValue === 'function') calculateGoldValue();
+    // QUAN TRỌNG: Gọi hàm renderAssets để tính toán lại toàn bộ Dashboard (Giá trị quy đổi, Tổng tài sản...)
+    if (typeof renderAssets === 'function') {
+        renderAssets();
+    }
 };
 
 
