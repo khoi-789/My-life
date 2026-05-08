@@ -303,6 +303,7 @@ const els = {
     // Gold Purchase Details
     goldPurchaseAmount: document.getElementById('gold-purchase-amount'),
     goldPurchaseUnit: document.getElementById('gold-purchase-unit'),
+    goldPurchaseUnitPrice: document.getElementById('gold-purchase-unit-price'),
     goldPurchaseType: document.getElementById('gold-purchase-type'),
     goldPurchaseCost: document.getElementById('gold-purchase-cost'),
     goldPurchaseShop: document.getElementById('gold-purchase-shop'),
@@ -781,10 +782,30 @@ const setupEventListeners = () => {
     if (els.goldPurchaseCost) {
         els.goldPurchaseCost.addEventListener('input', function(e) {
             let value = this.value.replace(/\D/g, '');
-            if (value === '') {
-                this.value = '';
-            } else {
-                this.value = new Intl.NumberFormat('vi-VN').format(value);
+            this.value = value ? new Intl.NumberFormat('vi-VN').format(value) : '';
+        });
+    }
+
+    if (els.goldPurchaseUnitPrice) {
+        els.goldPurchaseUnitPrice.addEventListener('input', function(e) {
+            let value = this.value.replace(/\D/g, '');
+            this.value = value ? new Intl.NumberFormat('vi-VN').format(value) : '';
+            
+            // Tự động tính tổng tiền: Tiền vốn = Số lượng * Đơn giá
+            const amt = parseFloat(els.goldPurchaseAmount.value) || 0;
+            const unitPrice = parseInt(value) || 0;
+            if (amt > 0 && unitPrice > 0) {
+                els.goldPurchaseCost.value = new Intl.NumberFormat('vi-VN').format(amt * unitPrice);
+            }
+        });
+    }
+
+    if (els.goldPurchaseAmount) {
+        els.goldPurchaseAmount.addEventListener('input', function() {
+            const amt = parseFloat(this.value) || 0;
+            const unitPrice = parseInt(els.goldPurchaseUnitPrice.value.replace(/\D/g, '')) || 0;
+            if (amt > 0 && unitPrice > 0) {
+                els.goldPurchaseCost.value = new Intl.NumberFormat('vi-VN').format(amt * unitPrice);
             }
         });
     }
@@ -1771,6 +1792,8 @@ const addGoldPurchase = () => {
 
     const amt = parseFloat(els.goldPurchaseAmount.value) || 0;
     const unit = els.goldPurchaseUnit.value;
+    const unitPriceStr = els.goldPurchaseUnitPrice.value.replace(/\D/g, '');
+    const unitPrice = parseInt(unitPriceStr) || 0;
     const type = els.goldPurchaseType.value.trim();
     const costStr = els.goldPurchaseCost.value.replace(/\D/g, '');
     const cost = parseInt(costStr) || 0;
@@ -1789,7 +1812,7 @@ const addGoldPurchase = () => {
         if (index !== -1) {
             state.assets.goldPurchases[index] = {
                 ...state.assets.goldPurchases[index],
-                date, amount: amt, unit, type: type || 'Vàng', cost, 
+                date, amount: amt, unit, unitPrice, type: type || 'Vàng', cost, 
                 shop: shop || 'N/A', address: address || 'N/A', note: note || ''
             };
             alert('Đã cập nhật bản ghi!');
@@ -1801,6 +1824,7 @@ const addGoldPurchase = () => {
             date,
             amount: amt,
             unit,
+            unitPrice,
             type: type || 'Vàng',
             cost,
             shop: shop || 'N/A',
@@ -1826,6 +1850,7 @@ const resetGoldPurchaseForm = () => {
     els.goldPurchaseDate.value = today;
     els.goldPurchaseDateDisplay.value = `${d}/${m}/${y}`;
     els.goldPurchaseAmount.value = '';
+    els.goldPurchaseUnitPrice.value = '';
     els.goldPurchaseType.value = '';
     els.goldPurchaseCost.value = '';
     els.goldPurchaseShop.value = '';
@@ -1845,6 +1870,7 @@ const editGoldPurchase = (id) => {
     els.goldPurchaseDateDisplay.value = `${d}/${m}/${y}`;
     els.goldPurchaseAmount.value = purchase.amount;
     els.goldPurchaseUnit.value = purchase.unit;
+    els.goldPurchaseUnitPrice.value = purchase.unitPrice ? new Intl.NumberFormat('vi-VN').format(purchase.unitPrice) : '';
     els.goldPurchaseType.value = purchase.type;
     els.goldPurchaseCost.value = new Intl.NumberFormat('vi-VN').format(purchase.cost);
     els.goldPurchaseShop.value = purchase.shop;
@@ -1891,12 +1917,12 @@ const renderGoldPurchases = () => {
         
         const unitName = p.unit === 'chi' ? 'Chỉ' : 'Cây';
         const formattedDate = new Date(p.date).toLocaleDateString('vi-VN');
-        const unitPrice = p.amount > 0 ? (p.cost / p.amount) : 0;
+        const unitPriceDisplay = p.unitPrice ? formatCurrency(p.unitPrice) : 'N/A';
         
         row.innerHTML = `
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 13px;">${formattedDate}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-weight: 600;">${p.amount} ${unitName}</td>
-            <td style="padding: 12px; border-bottom: 1px solid var(--card-border); text-align: right; color: var(--text-muted); font-size: 13px;">${formatCurrency(unitPrice)}</td>
+            <td style="padding: 12px; border-bottom: 1px solid var(--card-border); text-align: right; color: var(--text-muted); font-size: 13px;">${unitPriceDisplay}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 13px;">${p.type}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); text-align: right; color: var(--danger); font-weight: 600;">${formatCurrency(p.cost)}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 13px;">${p.shop}</td>
