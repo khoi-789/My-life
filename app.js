@@ -1987,10 +1987,14 @@ const updateGoldAmountFromTicks = () => {
         totalInChi += (unit === 'cay' ? amt * 10 : amt);
     });
 
-    const targetUnit = els.goldUnit.value;
+    // Sử dụng đúng tên biến đã khai báo trong els
+    const targetUnit = els.goldUnitSelect.value;
     const finalAmount = (targetUnit === 'cay' ? totalInChi / 10 : totalInChi);
 
-    els.goldAmount.value = finalAmount > 0 ? finalAmount.toFixed(3).replace(/\.?0+$/, '') : 0;
+    // Điền vào ô input (Vẫn cho phép người dùng sửa tay sau đó)
+    els.goldAmountInput.value = finalAmount > 0 ? finalAmount.toFixed(3).replace(/\.?0+$/, '') : 0;
+    
+    // Gọi hàm tính toán lại giá trị vàng quy đổi
     if (typeof calculateGoldValue === 'function') calculateGoldValue();
 };
 
