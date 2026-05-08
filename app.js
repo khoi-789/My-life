@@ -1955,6 +1955,25 @@ const renderGoldPurchases = () => {
     if (els.totalGoldCost) {
         els.totalGoldCost.textContent = formatCurrency(totalCost);
     }
+
+    // Tính toán Lời/Lỗ (Profit/Loss Calculation)
+    if (els.goldProfitLoss) {
+        const goldAmtMarket = parseFloat(els.goldAmount?.value) || state.assets.goldAmount || 0;
+        const goldUnitMarket = els.goldUnit?.value || state.assets.goldUnit || 'chi';
+        const manualPriceStr = els.manualGoldPriceInput?.value.replace(/\D/g, '') || '';
+        const pricePerChiMarket = manualPriceStr ? parseInt(manualPriceStr) : (state.assets.manualPrice || 0);
+        
+        let totalGoldInChiMarket = 0;
+        if (goldUnitMarket === 'chi') totalGoldInChiMarket = goldAmtMarket;
+        else if (goldUnitMarket === 'cay') totalGoldInChiMarket = goldAmtMarket * 10;
+        else if (goldUnitMarket === 'phan') totalGoldInChiMarket = goldAmtMarket / 10;
+
+        const currentMarketValue = totalGoldInChiMarket * pricePerChiMarket;
+        const profit = currentMarketValue - totalCost;
+
+        els.goldProfitLoss.textContent = formatCurrency(profit);
+        els.goldProfitLoss.style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)';
+    }
 };
 
 // Hàm mới: Tính toán số lượng vàng từ các ô đã tick
@@ -1965,44 +1984,16 @@ const updateGoldAmountFromTicks = () => {
     checkboxes.forEach(cb => {
         const amt = parseFloat(cb.dataset.amount) || 0;
         const unit = cb.dataset.unit;
-        // Quy đổi tất cả về Chỉ để cộng (1 Cây = 10 Chỉ)
         totalInChi += (unit === 'cay' ? amt * 10 : amt);
     });
 
-    // Lấy đơn vị hiện tại của ô "Số lượng vàng đang giữ" để quy đổi ngược lại
     const targetUnit = els.goldUnit.value;
     const finalAmount = (targetUnit === 'cay' ? totalInChi / 10 : totalInChi);
 
-    // Điền vào ô input
     els.goldAmount.value = finalAmount > 0 ? finalAmount.toFixed(3).replace(/\.?0+$/, '') : 0;
-    
-    // Gọi hàm tính toán lại các giá trị quy đổi (giá trị vàng, tổng tài sản...)
     if (typeof calculateGoldValue === 'function') calculateGoldValue();
 };
 
-    // Profit/Loss Calculation
-    if (els.goldProfitLoss) {
-        // We compare totalCost (investment) with the current goldValue (market value)
-        // goldValue is calculated in the main renderAssets function
-        
-        // Let's get the current market value of gold from the UI or recalculate
-        const goldAmtMarket = parseFloat(els.goldAmountInput?.value) || state.assets.goldAmount || 0;
-        const goldUnitMarket = els.goldUnitSelect?.value || state.assets.goldUnit || 'chi';
-        const manualPriceStr = els.manualGoldInput?.value.replace(/\D/g, '') || '';
-        const pricePerChiMarket = manualPriceStr ? parseInt(manualPriceStr) : (state.assets.manualPrice || 0);
-        
-        let totalGoldInChiMarket = 0;
-        if (goldUnitMarket === 'chi') totalGoldInChiMarket = goldAmtMarket;
-        else if (goldUnitMarket === 'cay') totalGoldInChiMarket = goldAmtMarket * 10;
-        else if (goldUnitMarket === 'phan') totalGoldInChiMarket = goldAmtMarket / 10;
-
-        const currentMarketValue = totalGoldInChiMarket * pricePerChiMarket;
-        const profit = currentMarketValue - totalCost;
-        
-        els.goldProfitLoss.textContent = (profit >= 0 ? '+' : '') + formatCurrency(profit);
-        els.goldProfitLoss.style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)';
-    }
-};
 
 // Expose to global window for onclick attributes
 window.deleteGoldPurchase = deleteGoldPurchase;
