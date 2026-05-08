@@ -307,6 +307,7 @@ const els = {
     goldPurchaseCost: document.getElementById('gold-purchase-cost'),
     goldPurchaseShop: document.getElementById('gold-purchase-shop'),
     goldPurchaseAddress: document.getElementById('gold-purchase-address'),
+    goldPurchaseNote: document.getElementById('gold-purchase-note'),
     goldPurchaseDate: document.getElementById('gold-purchase-date'),
     goldPurchaseDateDisplay: document.getElementById('gold-purchase-date-display'),
     btnOpenGoldCalendar: document.getElementById('btn-open-gold-calendar'),
@@ -1775,6 +1776,7 @@ const addGoldPurchase = () => {
     const cost = parseInt(costStr) || 0;
     const shop = els.goldPurchaseShop.value.trim();
     const address = els.goldPurchaseAddress.value.trim();
+    const note = els.goldPurchaseNote.value.trim();
 
     if (amt <= 0 || cost <= 0) {
         alert('Vui lòng nhập số lượng và số tiền hợp lệ.');
@@ -1787,7 +1789,8 @@ const addGoldPurchase = () => {
         if (index !== -1) {
             state.assets.goldPurchases[index] = {
                 ...state.assets.goldPurchases[index],
-                date, amount: amt, unit, type: type || 'Vàng', cost, shop: shop || 'N/A', address: address || 'N/A'
+                date, amount: amt, unit, type: type || 'Vàng', cost, 
+                shop: shop || 'N/A', address: address || 'N/A', note: note || ''
             };
             alert('Đã cập nhật bản ghi!');
         }
@@ -1801,7 +1804,8 @@ const addGoldPurchase = () => {
             type: type || 'Vàng',
             cost,
             shop: shop || 'N/A',
-            address: address || 'N/A'
+            address: address || 'N/A',
+            note: note || ''
         };
         state.assets.goldPurchases.push(purchase);
         alert('Đã thêm bản ghi mua vàng!');
@@ -1826,6 +1830,7 @@ const resetGoldPurchaseForm = () => {
     els.goldPurchaseCost.value = '';
     els.goldPurchaseShop.value = '';
     els.goldPurchaseAddress.value = '';
+    els.goldPurchaseNote.value = '';
     els.goldPurchaseBtnText.textContent = 'Thêm vào danh sách';
 };
 
@@ -1844,6 +1849,7 @@ const editGoldPurchase = (id) => {
     els.goldPurchaseCost.value = new Intl.NumberFormat('vi-VN').format(purchase.cost);
     els.goldPurchaseShop.value = purchase.shop;
     els.goldPurchaseAddress.value = purchase.address;
+    els.goldPurchaseNote.value = purchase.note || '';
     els.goldPurchaseBtnText.textContent = 'Cập nhật bản ghi';
     
     // Scroll to form
@@ -1893,6 +1899,7 @@ const renderGoldPurchases = () => {
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); text-align: right; color: var(--danger); font-weight: 600;">${formatCurrency(p.cost)}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 13px;">${p.shop}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 12px; color: var(--text-muted);">${p.address}</td>
+            <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 12px; color: var(--text-muted);">${p.note || ''}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); text-align: center;">
                 <div style="display:flex; gap:8px; justify-content: center;">
                     <button onclick="editGoldPurchase(${p.id})" class="btn btn-secondary small" title="Sửa" style="padding:4px 8px; color:var(--primary); background:var(--primary-light);">
