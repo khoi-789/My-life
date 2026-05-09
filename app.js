@@ -122,6 +122,7 @@ const migrateState = (data) => {
         };
     }
     if (!data.assets.goldPurchases) data.assets.goldPurchases = [];
+    if (!data.assets.selectedGoldPurchaseIds) data.assets.selectedGoldPurchaseIds = [];
     
     // 4. Force update all DEFAULT_CATEGORIES exist and are updated
     ['income', 'expense', 'debt'].forEach(type => {
@@ -829,6 +830,9 @@ const setupEventListeners = () => {
     if (els.btnAddGoldPurchase) {
         els.btnAddGoldPurchase.addEventListener('click', addGoldPurchase);
     }
+
+    // Bật bộ bắt sự kiện siêu nhạy cho bảng vàng
+    setupGoldCheckboxDelegation();
 
     if (els.btnOpenGoldCalendar) {
         els.btnOpenGoldCalendar.addEventListener('click', () => {
@@ -1935,8 +1939,8 @@ const renderGoldPurchases = () => {
         const formattedDate = new Date(p.date).toLocaleDateString('vi-VN');
         const unitPriceDisplay = p.unitPrice ? formatCurrency(p.unitPrice) : 'N/A';
         
-        // Kiểm tra xem ID này có đang được chọn không
-        const isSelected = state.assets.selectedGoldPurchaseIds?.includes(p.id);
+        // Kiểm tra xem ID này có đang được chọn không (Hỗ trợ cả kiểu String và Number)
+        const isSelected = state.assets.selectedGoldPurchaseIds?.some(sid => String(sid) === String(p.id));
         
         row.innerHTML = `
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); text-align: center;">
@@ -1964,15 +1968,55 @@ const renderGoldPurchases = () => {
         els.goldPurchaseList.appendChild(row);
     });
 
-    // Cập nhật sự kiện cho các checkbox
-    const checkboxes = els.goldPurchaseList.querySelectorAll('.gold-row-checkbox');
-    checkboxes.forEach(cb => {
-        cb.addEventListener('change', updateGoldAmountFromTicks);
-    });
-
     if (els.totalGoldCost) {
         els.totalGoldCost.textContent = formatCurrency(totalCost);
     }
+    
+    // Cập nhật giá trị hiển thị con số "Đang chọn" ngay khi vừa vẽ bảng
+    calculateInitialTickSum();
+};
+
+// Hàm mới: Bắt sự kiện Click vào khung bảng để xử lý cực nhạy (Event Delegation)
+const setupGoldCheckboxDelegation = () => {
+    if (!els.goldPurchaseList) return;
+    
+    // Xóa listener cũ nếu có (tránh trùng lặp)
+    els.goldPurchaseList.removeEventListener('change', handleGoldCheckboxChange);
+    els.goldPurchaseList.addEventListener('change', handleGoldCheckboxChange);
+};
+
+const handleGoldCheckboxChange = (e) => {
+    if (e.target.classList.contains('gold-row-checkbox')) {
+        updateGoldAmountFromTicks();
+    }
+};
+
+// Tính toán con số "Đang chọn" ngay khi mở App hoặc vẽ lại bảng
+const calculateInitialTickSum = () => {
+    if (!state.assets.selectedGoldPurchaseIds || !els.selectedGoldSum) return;
+    
+    let totalInChi = 0;
+    state.assets.goldPurchases.forEach(p => {
+        if (state.assets.selectedGoldPurchaseIds.includes(String(p.id)) || state.assets.selectedGoldPurchaseIds.includes(Number(p.id))) {
+            totalInChi += (p.unit === 'cay' ? p.amount * 10 : p.amount);
+        }
+    });
+
+    const targetUnit = els.goldUnitSelect?.value || 'chi';
+    const finalAmount = (targetUnit === 'cay' ? totalInChi / 10 : totalInChi);
+
+    els.selectedGoldSum.textContent = finalAmount.toFixed(3).replace(/\.?0+$/, '');
+    if (els.selectedGoldTotalDisplay) {
+        els.selectedGoldTotalDisplay.style.display = totalInChi > 0 ? 'block' : 'none';
+    }
+    
+    // Cập nhật trạng thái nút Tick Tổng (Select All)
+    if (els.goldSelectAll) {
+        const checkboxes = els.goldPurchaseList.querySelectorAll('.gold-row-checkbox');
+        const checkedCount = els.goldPurchaseList.querySelectorAll('.gold-row-checkbox:checked').length;
+        els.goldSelectAll.checked = (checkboxes.length > 0 && checkedCount === checkboxes.length);
+    }
+};
 
     // Tính toán Lời/Lỗ (Profit/Loss Calculation)
     if (els.goldProfitLoss) {
@@ -2007,22 +2051,22 @@ const updateGoldAmountFromTicks = () => {
         const amt = parseFloat(cb.dataset.amount) || 0;
         const unit = cb.dataset.unit;
         
-        if (id) selectedIds.push(id);
+        if (id) selectedIds.push(String(id)); // Luôn lưu dưới dạng String để đồng nhất
         totalInChi += (unit === 'cay' ? amt * 10 : amt);
     });
 
-    // Cập nhật danh sách ID đã chọn vào State để duy trì dấu Tick khi vẽ lại bảng
+    // Cập nhật danh sách ID đã chọn vào State
     state.assets.selectedGoldPurchaseIds = selectedIds;
     
-    // Cập nhật trạng thái nút Tick Tổng (Select All)
+    // Cập nhật trạng thái nút Tick Tổng
     if (els.goldSelectAll) {
-        els.goldSelectAll.checked = (checkboxes.length === allCheckboxes.length && allCheckboxes.length > 0);
+        els.goldSelectAll.checked = (checkboxes.length > 0 && checkboxes.length === allCheckboxes.length);
     }
 
-    const targetUnit = els.goldUnitSelect.value;
+    const targetUnit = els.goldUnitSelect?.value || 'chi';
     const finalAmount = (targetUnit === 'cay' ? totalInChi / 10 : totalInChi);
 
-    // 1. Hiển thị con số "Đang chọn" lên giao diện
+    // 1. Hiển thị con số "Đang chọn"
     if (els.selectedGoldSum) {
         els.selectedGoldSum.textContent = finalAmount.toFixed(3).replace(/\.?0+$/, '');
         if (els.selectedGoldTotalDisplay) {
@@ -2030,17 +2074,17 @@ const updateGoldAmountFromTicks = () => {
         }
     }
 
-    // 2. Điền vào ô nhập liệu chính (Số lượng vàng đang giữ)
+    // 2. Điền vào ô nhập liệu chính
     if (els.goldAmountInput) {
         els.goldAmountInput.value = finalAmount > 0 ? finalAmount.toFixed(3).replace(/\.?0+$/, '') : 0;
     }
     
-    // 3. Cập nhật State và LƯU VĨNH VIỄN LÊN DATABASE (FIREBASE)
+    // 3. CẬP NHẬT DATABASE (FIREBASE)
     state.assets.goldAmount = finalAmount;
     state.assets.goldUnit = targetUnit;
     saveData(); 
     
-    // 4. Đồng bộ tính toán lại toàn bộ Dashboard (Giá trị quy đổi, Tổng tài sản...)
+    // 4. Tính toán lại Dashboard
     if (typeof renderAssets === 'function') {
         renderAssets();
     }
