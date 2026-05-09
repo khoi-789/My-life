@@ -905,3 +905,12 @@ input:checked + .debt-box {
 .negative-text {
     color: var(--danger) !important;
 }
+
+ / *   T a t   h i e u   u n g   h o v e r   c h o   b a n g   d a n h   m u c   v a n g   t r o n g   t a b   T A I   S A N   * / 
+ . t r a n s a c t i o n - t a b l e   t r : h o v e r   { 
+         b a c k g r o u n d - c o l o r :   t r a n s p a r e n t   ! i m p o r t a n t ; 
+         t r a n s f o r m :   n o n e   ! i m p o r t a n t ; 
+         b o x - s h a d o w :   n o n e   ! i m p o r t a n t ; 
+ } 
+  
+ 
