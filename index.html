@@ -413,12 +413,21 @@
                             </div>
                         </div>
 
+                        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h3 style="font-size: 16px; font-weight: 600; margin: 0;"><i class="ph ph-list-bullets"></i> Danh sách chi tiết</h3>
+                            <div id="selected-gold-total-display" style="font-weight: 600; color: var(--primary); font-size: 14px; background: var(--primary-light); padding: 4px 12px; border-radius: 20px; display: none;">
+                                Đang chọn: <span id="selected-gold-sum">0</span> Chi
+                            </div>
+                        </div>
+
                         <!-- Danh sách mua vàng dạng Bảng (Table) -->
                         <div class="table-responsive" style="margin-top: 10px; overflow-x: auto;">
                             <table class="transaction-table" style="width: 100%; min-width: 1100px; border-collapse: collapse;">
                                 <thead>
                                     <tr>
-                                        <th style="width: 40px; padding: 12px; text-align: center;"></th>
+                                        <th style="width: 40px; padding: 12px; text-align: center;">
+                                            <input type="checkbox" id="gold-select-all" style="width:18px; height:18px; cursor:pointer;">
+                                        </th>
                                         <th style="text-align: left; padding: 12px; width: 100px;">Ngày mua</th>
                                         <th style="text-align: left; padding: 12px; width: 120px;">Số lượng</th>
                                         <th style="text-align: right; padding: 12px; width: 130px;">Đơn giá</th>

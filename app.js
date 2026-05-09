@@ -66,7 +66,9 @@ let state = {
         bankSavings: 0,
         lastGoldPrice: 0,
         isManualGold: true,
-        manualPrice: 0
+        manualPrice: 0,
+        goldPurchases: [],
+        selectedGoldPurchaseIds: []
     }
 };
 
@@ -318,6 +320,9 @@ const els = {
     goldPurchaseList: document.getElementById('gold-purchase-list'),
     totalGoldCost: document.getElementById('total-gold-cost'),
     goldProfitLoss: document.getElementById('gold-profit-loss'),
+    goldSelectAll: document.getElementById('gold-select-all'),
+    selectedGoldSum: document.getElementById('selected-gold-sum'),
+    selectedGoldTotalDisplay: document.getElementById('selected-gold-total-display'),
 
     // Merge Transactions
     btnMergeTransactions: document.getElementById('btn-merge-transactions'),
@@ -756,6 +761,17 @@ const setupEventListeners = () => {
                 this.value = new Intl.NumberFormat('vi-VN').format(value);
             }
             renderAssets();
+        });
+    }
+
+    if (els.goldSelectAll) {
+        els.goldSelectAll.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            const checkboxes = els.goldPurchaseList.querySelectorAll('.gold-row-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = isChecked;
+            });
+            updateGoldAmountFromTicks();
         });
     }
 
@@ -1919,10 +1935,12 @@ const renderGoldPurchases = () => {
         const formattedDate = new Date(p.date).toLocaleDateString('vi-VN');
         const unitPriceDisplay = p.unitPrice ? formatCurrency(p.unitPrice) : 'N/A';
         
-        // Trạng thái checkbox (nếu có thể lưu vào state thì tốt, tạm thời mặc định bỏ tick)
+        // Kiểm tra xem ID này có đang được chọn không
+        const isSelected = state.assets.selectedGoldPurchaseIds?.includes(p.id);
+        
         row.innerHTML = `
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); text-align: center;">
-                <input type="checkbox" class="gold-row-checkbox" data-amount="${p.amount}" data-unit="${p.unit}" style="width:18px; height:18px; cursor:pointer;">
+                <input type="checkbox" class="gold-row-checkbox" data-id="${p.id}" data-amount="${p.amount}" data-unit="${p.unit}" ${isSelected ? 'checked' : ''} style="width:18px; height:18px; cursor:pointer;">
             </td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 13px;">${formattedDate}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-weight: 600;">${p.amount} ${unitName}</td>
@@ -1946,7 +1964,7 @@ const renderGoldPurchases = () => {
         els.goldPurchaseList.appendChild(row);
     });
 
-    // Thêm sự kiện cho các checkbox mới tạo
+    // Cập nhật sự kiện cho các checkbox
     const checkboxes = els.goldPurchaseList.querySelectorAll('.gold-row-checkbox');
     checkboxes.forEach(cb => {
         cb.addEventListener('change', updateGoldAmountFromTicks);
@@ -1976,28 +1994,53 @@ const renderGoldPurchases = () => {
     }
 };
 
-// Hàm mới: Tính toán số lượng vàng từ các ô đã tick
+// Hàm mới: Tính toán số lượng vàng từ các ô đã tick và LƯU DATABASE
 const updateGoldAmountFromTicks = () => {
     const checkboxes = els.goldPurchaseList.querySelectorAll('.gold-row-checkbox:checked');
+    const allCheckboxes = els.goldPurchaseList.querySelectorAll('.gold-row-checkbox');
+    
     let totalInChi = 0;
+    const selectedIds = [];
 
     checkboxes.forEach(cb => {
+        const id = cb.dataset.id;
         const amt = parseFloat(cb.dataset.amount) || 0;
         const unit = cb.dataset.unit;
-        // Quy đổi tất cả về Chỉ để cộng (1 Cây = 10 Chỉ)
+        
+        if (id) selectedIds.push(id);
         totalInChi += (unit === 'cay' ? amt * 10 : amt);
     });
 
-    // Lấy đơn vị hiện tại của ô "Số lượng vàng đang giữ" để quy đổi ngược lại
+    // Cập nhật danh sách ID đã chọn vào State để duy trì dấu Tick khi vẽ lại bảng
+    state.assets.selectedGoldPurchaseIds = selectedIds;
+    
+    // Cập nhật trạng thái nút Tick Tổng (Select All)
+    if (els.goldSelectAll) {
+        els.goldSelectAll.checked = (checkboxes.length === allCheckboxes.length && allCheckboxes.length > 0);
+    }
+
     const targetUnit = els.goldUnitSelect.value;
     const finalAmount = (targetUnit === 'cay' ? totalInChi / 10 : totalInChi);
 
-    // Điền vào ô input (Vẫn cho phép người dùng sửa tay sau đó)
+    // 1. Hiển thị con số "Đang chọn" lên giao diện
+    if (els.selectedGoldSum) {
+        els.selectedGoldSum.textContent = finalAmount.toFixed(3).replace(/\.?0+$/, '');
+        if (els.selectedGoldTotalDisplay) {
+            els.selectedGoldTotalDisplay.style.display = totalInChi > 0 ? 'block' : 'none';
+        }
+    }
+
+    // 2. Điền vào ô nhập liệu chính (Số lượng vàng đang giữ)
     if (els.goldAmountInput) {
         els.goldAmountInput.value = finalAmount > 0 ? finalAmount.toFixed(3).replace(/\.?0+$/, '') : 0;
     }
     
-    // QUAN TRỌNG: Gọi hàm renderAssets để tính toán lại toàn bộ Dashboard (Giá trị quy đổi, Tổng tài sản...)
+    // 3. Cập nhật State và LƯU VĨNH VIỄN LÊN DATABASE (FIREBASE)
+    state.assets.goldAmount = finalAmount;
+    state.assets.goldUnit = targetUnit;
+    saveData(); 
+    
+    // 4. Đồng bộ tính toán lại toàn bộ Dashboard (Giá trị quy đổi, Tổng tài sản...)
     if (typeof renderAssets === 'function') {
         renderAssets();
     }
