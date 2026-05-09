@@ -914,3 +914,29 @@ input:checked + .debt-box {
  } 
   
  
+ / *   T A T   T O A N   B O   H I E U   U N G   H O V E R   T R O N G   T A B   T A I   S A N   * / 
+ # t a b - a s s e t s   * : h o v e r   { 
+         t r a n s f o r m :   n o n e   ! i m p o r t a n t ; 
+         b a c k g r o u n d - c o l o r :   i n h e r i t   ! i m p o r t a n t ; 
+         b o x - s h a d o w :   n o n e   ! i m p o r t a n t ; 
+         b o r d e r - c o l o r :   i n h e r i t   ! i m p o r t a n t ; 
+ } 
+ 
+ / *   G i u   m a u   s a c   c h o   c a c   n u t   b a m   k h i   h o v e r   t r o n g   t a b   T a i   s a n   * / 
+ # t a b - a s s e t s   . b t n - p r i m a r y : h o v e r   { 
+         b a c k g r o u n d - c o l o r :   v a r ( - - p r i m a r y )   ! i m p o r t a n t ; 
+         c o l o r :   w h i t e   ! i m p o r t a n t ; 
+ } 
+ 
+ # t a b - a s s e t s   . b t n - s e c o n d a r y : h o v e r   { 
+         b a c k g r o u n d - c o l o r :   r g b a ( 2 5 5 ,   2 5 5 ,   2 5 5 ,   0 . 0 5 )   ! i m p o r t a n t ; 
+ } 
+ 
+ / *   £m   b £o   c á c   t h à n h   p h §n   k h ô n g   b Ë  n h á y   h a y   Õi   m à u   n Án   k h i   d i   c h u Ùt   * / 
+ # t a b - a s s e t s   . c a r d : h o v e r   { 
+         t r a n s f o r m :   n o n e   ! i m p o r t a n t ; 
+         b o x - s h a d o w :   v a r ( - - g l a s s - s h a d o w )   ! i m p o r t a n t ; 
+         b a c k g r o u n d :   v a r ( - - c a r d - b g )   ! i m p o r t a n t ; 
+ } 
+  
+ 
