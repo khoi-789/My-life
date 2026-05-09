@@ -2018,25 +2018,9 @@ const calculateInitialTickSum = () => {
     }
 };
 
-    // Tính toán Lời/Lỗ (Profit/Loss Calculation)
-    if (els.goldProfitLoss) {
-        const goldAmtMarket = parseFloat(els.goldAmount?.value) || state.assets.goldAmount || 0;
-        const goldUnitMarket = els.goldUnit?.value || state.assets.goldUnit || 'chi';
-        const manualPriceStr = els.manualGoldPriceInput?.value.replace(/\D/g, '') || '';
-        const pricePerChiMarket = manualPriceStr ? parseInt(manualPriceStr) : (state.assets.manualPrice || 0);
-        
-        let totalGoldInChiMarket = 0;
-        if (goldUnitMarket === 'chi') totalGoldInChiMarket = goldAmtMarket;
-        else if (goldUnitMarket === 'cay') totalGoldInChiMarket = goldAmtMarket * 10;
-        else if (goldUnitMarket === 'phan') totalGoldInChiMarket = goldAmtMarket / 10;
 
-        const currentMarketValue = totalGoldInChiMarket * pricePerChiMarket;
-        const profit = currentMarketValue - totalCost;
 
-        els.goldProfitLoss.textContent = formatCurrency(profit);
-        els.goldProfitLoss.style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)';
-    }
-};
+
 
 // Hàm mới: Tính toán số lượng vàng từ các ô đã tick và LƯU DATABASE
 const updateGoldAmountFromTicks = () => {
