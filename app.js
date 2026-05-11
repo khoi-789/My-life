@@ -828,9 +828,34 @@ const setupEventListeners = () => {
         });
     }
 
+    if (els.manualGoldInput) {
+        els.manualGoldInput.addEventListener('input', () => {
+            renderGoldPurchases(); // Cập nhật ngay con số Chênh lệch khi gõ giá
+        });
+    }
+
     if (els.btnAddGoldPurchase) {
         els.btnAddGoldPurchase.addEventListener('click', addGoldPurchase);
     }
+
+    // Gold Purchase Filter
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            // Cập nhật UI nút active
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'none';
+                b.style.color = 'var(--text-main)';
+            });
+            e.target.classList.add('active');
+            e.target.style.background = 'var(--primary)';
+            e.target.style.color = 'white';
+
+            // Cập nhật state và render lại
+            state.activeGoldFilter = e.target.dataset.filter;
+            renderGoldPurchases();
+        });
+    });
 
     // Bật bộ bắt sự kiện siêu nhạy cho bảng vàng
     setupGoldCheckboxDelegation();
@@ -1919,32 +1944,44 @@ const renderGoldPurchases = () => {
     
     els.goldPurchaseList.innerHTML = '';
     let totalCost = 0;
+    let totalAmountInChi = 0; // Để tính chênh lệch thực tế
 
-    if (state.assets.goldPurchases.length === 0) {
+    // Lấy giá vàng hiện tại để tính chênh lệch (Giá 1 Chỉ)
+    const manualPriceStr = els.manualGoldInput?.value.replace(/\D/g, '') || '';
+    const currentPricePerChi = parseInt(manualPriceStr) || state.assets.manualPrice || 0;
+
+    const filter = state.activeGoldFilter || 'all';
+    const filteredPurchases = state.assets.goldPurchases.filter(p => {
+        if (filter === 'all') return true;
+        return (p.category || 'tài sản') === filter;
+    });
+
+    if (filteredPurchases.length === 0) {
         els.goldPurchaseList.innerHTML = `
             <tr>
-                <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                <td colspan="10" style="text-align: center; padding: 40px; color: var(--text-muted);">
                     <i class="ph ph-calendar-blank" style="font-size: 48px; opacity: 0.2; margin-bottom: 10px;"></i>
-                    <p>Chưa có dữ liệu mua vàng</p>
+                    <p>Không có dữ liệu cho mục này</p>
                 </td>
             </tr>
         `;
         if (els.totalGoldCost) els.totalGoldCost.textContent = '0 ₫';
+        if (els.goldProfitLoss) els.goldProfitLoss.textContent = '0 ₫';
         return;
     }
 
     // Sort by date descending
-    const sorted = [...state.assets.goldPurchases].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sorted = [...filteredPurchases].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     sorted.forEach(p => {
         totalCost += p.cost;
+        // Quy đổi về Chỉ để tính tổng khối lượng đang chọn theo bộ lọc
+        totalAmountInChi += (p.unit === 'cay' ? p.amount * 10 : p.amount);
+
         const row = document.createElement('tr');
-        
         const unitName = p.unit === 'chi' ? 'Chỉ' : 'Cây';
         const formattedDate = new Date(p.date).toLocaleDateString('vi-VN');
         const unitPriceDisplay = p.unitPrice ? formatCurrency(p.unitPrice) : 'N/A';
-        
-        // Kiểm tra xem ID này có đang được chọn không (Hỗ trợ cả kiểu String và Number)
         const isSelected = state.assets.selectedGoldPurchaseIds?.some(sid => String(sid) === String(p.id));
         
         row.innerHTML = `
@@ -1974,11 +2011,20 @@ const renderGoldPurchases = () => {
         els.goldPurchaseList.appendChild(row);
     });
 
+    // Cập nhật Vốn
     if (els.totalGoldCost) {
         els.totalGoldCost.textContent = formatCurrency(totalCost);
     }
+
+    // Cập nhật Chênh lệch
+    if (els.goldProfitLoss) {
+        const currentMarketValue = totalAmountInChi * currentPricePerChi;
+        const profit = currentMarketValue - totalCost;
+        
+        els.goldProfitLoss.textContent = (profit >= 0 ? '+' : '') + formatCurrency(profit);
+        els.goldProfitLoss.style.color = profit >= 0 ? 'var(--success)' : 'var(--danger)';
+    }
     
-    // Cập nhật giá trị hiển thị con số "Đang chọn" ngay khi vừa vẽ bảng
     calculateInitialTickSum();
 };
 

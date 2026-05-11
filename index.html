@@ -346,8 +346,16 @@
                 <!-- Section: Chi tiết mua vàng - Đã chuyển ra ngoài Grid 3 cột để chiếm 100% width -->
                 <div id="gold-purchase-section" style="margin-top:24px; width: 100%;">
                     <div class="card glass-panel" id="gold-purchase-card" style="width: 100%;">
-                        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                            <h3><i class="ph ph-scroll"></i> Chi tiết danh mục vàng đã mua</h3>
+                        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap: wrap; gap: 15px;">
+                            <h3 style="margin:0;"><i class="ph ph-scroll"></i> Chi tiết danh mục vàng đã mua</h3>
+                            
+                            <!-- Bộ lọc xem theo Phân loại -->
+                            <div class="gold-filter-group" style="display:flex; background:rgba(0,0,0,0.05); padding:4px; border-radius:10px; gap:4px;">
+                                <button class="filter-btn active" data-filter="all" style="border:none; padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; font-weight:600; transition:all 0.2s;">Tất cả</button>
+                                <button class="filter-btn" data-filter="tài sản" style="border:none; padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; font-weight:600; transition:all 0.2s;">Tài sản</button>
+                                <button class="filter-btn" data-filter="kỷ niệm" style="border:none; padding:6px 12px; border-radius:8px; font-size:12px; cursor:pointer; font-weight:600; transition:all 0.2s;">Kỷ niệm</button>
+                            </div>
+
                             <div style="display:flex; gap:20px; align-items:center;">
                                 <div style="font-size:13px; color:var(--text-muted);">
                                     Vốn: <strong id="total-gold-cost" style="color:var(--text-main);">0 ₫</strong>
