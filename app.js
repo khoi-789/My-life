@@ -841,7 +841,7 @@ const setupEventListeners = () => {
     // Gold Purchase Filter
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            // Cập nhật UI nút active
+            // 1. Cập nhật UI nút active
             document.querySelectorAll('.filter-btn').forEach(b => {
                 b.classList.remove('active');
                 b.style.background = 'none';
@@ -851,9 +851,39 @@ const setupEventListeners = () => {
             e.target.style.background = 'var(--primary)';
             e.target.style.color = 'white';
 
-            // Cập nhật state và render lại
-            state.activeGoldFilter = e.target.dataset.filter;
-            renderGoldPurchases();
+            // 2. Cập nhật state filter
+            const filter = e.target.dataset.filter;
+            state.activeGoldFilter = filter;
+
+            // 3. TỰ ĐỘNG CHỌN (TICK) CÁC DÒNG THEO PHÂN LOẠI
+            // Lọc ra các ID thuộc phân loại đang chọn
+            const matchedIds = state.assets.goldPurchases
+                .filter(p => filter === 'all' || (p.category || 'tài sản') === filter)
+                .map(p => p.id);
+            
+            // Cập nhật mảng được chọn trong state
+            state.assets.selectedGoldPurchaseIds = matchedIds;
+
+            // 4. ĐỒNG BỘ LÊN Ô "SỐ LƯỢNG VÀNG ĐANG GIỮ"
+            let totalInChi = 0;
+            state.assets.goldPurchases.forEach(p => {
+                if (matchedIds.includes(p.id)) {
+                    totalInChi += (p.unit === 'cay' ? p.amount * 10 : p.amount);
+                }
+            });
+
+            // Cập nhật ô nhập liệu và state
+            if (els.goldAmountInput) {
+                els.goldAmountInput.value = totalInChi.toFixed(3);
+                state.assets.goldAmount = totalInChi;
+                state.assets.goldUnit = 'chi';
+                if (els.goldUnitSelect) els.goldUnitSelect.value = 'chi';
+            }
+
+            // 5. LƯU VÀ VẼ LẠI
+            saveData();
+            renderAssets(); // Cập nhật Dashboard (Tổng tài sản, Quy đổi giá tiền)
+            renderGoldPurchases(); // Vẽ lại bảng (để hiện dấu tick xanh)
         });
     });
 
