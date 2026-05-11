@@ -308,6 +308,7 @@ const els = {
     goldPurchaseUnit: document.getElementById('gold-purchase-unit'),
     goldPurchaseUnitPrice: document.getElementById('gold-purchase-unit-price'),
     goldPurchaseType: document.getElementById('gold-purchase-type'),
+    goldPurchaseCategory: document.getElementById('gold-purchase-category'),
     goldPurchaseCost: document.getElementById('gold-purchase-cost'),
     goldPurchaseShop: document.getElementById('gold-purchase-shop'),
     goldPurchaseAddress: document.getElementById('gold-purchase-address'),
@@ -1815,6 +1816,7 @@ const addGoldPurchase = () => {
     const unitPriceStr = els.goldPurchaseUnitPrice.value.replace(/\D/g, '');
     const unitPrice = parseInt(unitPriceStr) || 0;
     const type = els.goldPurchaseType.value.trim();
+    const category = els.goldPurchaseCategory ? els.goldPurchaseCategory.value : 'tài sản';
     const costStr = els.goldPurchaseCost.value.replace(/\D/g, '');
     const cost = parseInt(costStr) || 0;
     const shop = els.goldPurchaseShop.value.trim();
@@ -1832,7 +1834,7 @@ const addGoldPurchase = () => {
         if (index !== -1) {
             state.assets.goldPurchases[index] = {
                 ...state.assets.goldPurchases[index],
-                date, amount: amt, unit, unitPrice, type: type || 'Vàng', cost, 
+                date, amount: amt, unit, unitPrice, type: type || 'Vàng', category, cost, 
                 shop: shop || 'N/A', address: address || 'N/A', note: note || ''
             };
             alert('Đã cập nhật bản ghi!');
@@ -1846,6 +1848,7 @@ const addGoldPurchase = () => {
             unit,
             unitPrice,
             type: type || 'Vàng',
+            category,
             cost,
             shop: shop || 'N/A',
             address: address || 'N/A',
@@ -1872,6 +1875,7 @@ const resetGoldPurchaseForm = () => {
     els.goldPurchaseAmount.value = '';
     els.goldPurchaseUnitPrice.value = '';
     els.goldPurchaseType.value = '';
+    if (els.goldPurchaseCategory) els.goldPurchaseCategory.value = 'tài sản';
     els.goldPurchaseCost.value = '';
     els.goldPurchaseShop.value = '';
     els.goldPurchaseAddress.value = '';
@@ -1892,6 +1896,7 @@ const editGoldPurchase = (id) => {
     els.goldPurchaseUnit.value = purchase.unit;
     els.goldPurchaseUnitPrice.value = purchase.unitPrice ? new Intl.NumberFormat('vi-VN').format(purchase.unitPrice) : '';
     els.goldPurchaseType.value = purchase.type;
+    if (els.goldPurchaseCategory) els.goldPurchaseCategory.value = purchase.category || 'tài sản';
     els.goldPurchaseCost.value = new Intl.NumberFormat('vi-VN').format(purchase.cost);
     els.goldPurchaseShop.value = purchase.shop;
     els.goldPurchaseAddress.value = purchase.address;
@@ -1950,6 +1955,7 @@ const renderGoldPurchases = () => {
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-weight: 600;">${p.amount} ${unitName}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); text-align: right; color: var(--text-muted); font-size: 13px;">${unitPriceDisplay}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 13px;">${p.type}</td>
+            <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 13px; text-transform: capitalize;">${p.category || 'Tài sản'}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); text-align: right; color: var(--danger); font-weight: 600;">${formatCurrency(p.cost)}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 13px;">${p.shop}</td>
             <td style="padding: 12px; border-bottom: 1px solid var(--card-border); font-size: 12px; color: var(--text-muted);">${p.address}</td>
