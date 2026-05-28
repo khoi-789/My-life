@@ -1683,16 +1683,13 @@ const renderTransactionPagination = (totalPages) => {
     const paginationContainer = document.getElementById('transactions-pagination');
     if (!paginationContainer) return;
     
-    if (totalPages <= 1) {
-        paginationContainer.innerHTML = '';
-        return;
-    }
-
+    const displayPages = Math.max(1, totalPages);
+    
     let html = '';
     
     html += `<button class="btn btn-secondary small" style="padding: 5px 10px;" onclick="changeTransactionPage(${currentTransactionPage - 1})" ${currentTransactionPage === 1 ? 'disabled' : ''}><i class="ph ph-caret-left"></i></button>`;
-    html += `<span style="font-size: 14px; font-weight: 500;">Trang ${currentTransactionPage} / ${totalPages}</span>`;
-    html += `<button class="btn btn-secondary small" style="padding: 5px 10px;" onclick="changeTransactionPage(${currentTransactionPage + 1})" ${currentTransactionPage === totalPages ? 'disabled' : ''}><i class="ph ph-caret-right"></i></button>`;
+    html += `<span style="font-size: 14px; font-weight: 500;">Trang ${currentTransactionPage} / ${displayPages}</span>`;
+    html += `<button class="btn btn-secondary small" style="padding: 5px 10px;" onclick="changeTransactionPage(${currentTransactionPage + 1})" ${currentTransactionPage >= displayPages ? 'disabled' : ''}><i class="ph ph-caret-right"></i></button>`;
 
     paginationContainer.innerHTML = html;
 };
@@ -1742,8 +1739,7 @@ const renderFullTransactionsTable = () => {
 
     if (filteredList.length === 0) {
         els.transactionsBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:30px;">Không có dữ liệu</td></tr>`;
-        const paginationContainer = document.getElementById('transactions-pagination');
-        if (paginationContainer) paginationContainer.innerHTML = '';
+        renderTransactionPagination(1);
         return;
     }
 
