@@ -746,14 +746,19 @@ const setupEventListeners = () => {
     });
     
     // Filter Transactions
+    const handleFilterChange = () => {
+        currentTransactionPage = 1;
+        renderFullTransactionsTable();
+    };
+
     if(els.filterType) {
         els.filterType.addEventListener('change', () => {
             if(typeof populateFilterCategories === 'function') populateFilterCategories();
-            renderFullTransactionsTable();
+            handleFilterChange();
         });
     }
     if(els.filterYear) {
-        els.filterYear.addEventListener('change', renderFullTransactionsTable);
+        els.filterYear.addEventListener('change', handleFilterChange);
     }
     if(els.filterMonth) {
         els.filterMonth.addEventListener('change', renderFullTransactionsTable);
@@ -1671,6 +1676,35 @@ const renderRecentTransactions = () => {
     });
 };
 
+let currentTransactionPage = 1;
+const TRANSACTIONS_PER_PAGE = 50;
+
+const renderTransactionPagination = (totalPages) => {
+    const paginationContainer = document.getElementById('transactions-pagination');
+    if (!paginationContainer) return;
+    
+    if (totalPages <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    
+    html += `<button class="btn btn-secondary small" style="padding: 5px 10px;" onclick="changeTransactionPage(${currentTransactionPage - 1})" ${currentTransactionPage === 1 ? 'disabled' : ''}><i class="ph ph-caret-left"></i></button>`;
+    html += `<span style="font-size: 14px; font-weight: 500;">Trang ${currentTransactionPage} / ${totalPages}</span>`;
+    html += `<button class="btn btn-secondary small" style="padding: 5px 10px;" onclick="changeTransactionPage(${currentTransactionPage + 1})" ${currentTransactionPage === totalPages ? 'disabled' : ''}><i class="ph ph-caret-right"></i></button>`;
+
+    paginationContainer.innerHTML = html;
+};
+
+window.changeTransactionPage = (newPage) => {
+    currentTransactionPage = newPage;
+    renderFullTransactionsTable();
+    // Scroll back up to the top of the table
+    const tableContainer = document.querySelector('.main-content');
+    if (tableContainer) tableContainer.scrollTop = 0;
+};
+
 // Full table in Transactions Tab
 const renderFullTransactionsTable = () => {
     els.transactionsBody.innerHTML = '';
@@ -1708,10 +1742,23 @@ const renderFullTransactionsTable = () => {
 
     if (filteredList.length === 0) {
         els.transactionsBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:30px;">Không có dữ liệu</td></tr>`;
+        const paginationContainer = document.getElementById('transactions-pagination');
+        if (paginationContainer) paginationContainer.innerHTML = '';
         return;
     }
 
-    filteredList.forEach(t => {
+    const totalPages = Math.ceil(filteredList.length / TRANSACTIONS_PER_PAGE);
+    if (currentTransactionPage > totalPages) {
+        currentTransactionPage = totalPages;
+    }
+    if (currentTransactionPage < 1) {
+        currentTransactionPage = 1;
+    }
+
+    const startIndex = (currentTransactionPage - 1) * TRANSACTIONS_PER_PAGE;
+    const paginatedList = filteredList.slice(startIndex, startIndex + TRANSACTIONS_PER_PAGE);
+
+    paginatedList.forEach(t => {
         const cat = getCategoryById(t.type, t.categoryId);
         let amountClass = 'expense-text';
         if (t.type === 'income') amountClass = 'income-text';
@@ -1777,6 +1824,8 @@ const renderFullTransactionsTable = () => {
         `;
         els.transactionsBody.insertAdjacentHTML('beforeend', html);
     });
+
+    renderTransactionPagination(totalPages);
 };
 
 // --- Assets Management ---
