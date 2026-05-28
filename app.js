@@ -98,6 +98,40 @@ const getCategoryById = (type, id) => {
 };
 
 // --- Storage API ---
+const setSyncStatus = (status, details = '') => {
+    const statusEl = document.getElementById('sync-status');
+    const sidebarStatusEl = document.getElementById('sidebar-sync-status');
+    
+    let text = '';
+    let color = '';
+    let emoji = '';
+    
+    if (status === 'syncing') {
+        text = 'Đang đồng bộ...';
+        color = '#eab308'; // Amber/Yellow
+        emoji = '🔄';
+    } else if (status === 'success') {
+        text = 'Đã đồng bộ';
+        color = 'var(--success)';
+        emoji = '☁️';
+    } else if (status === 'error') {
+        text = 'Lỗi đồng bộ';
+        color = 'var(--danger)';
+        emoji = '🔴';
+        if (details) text += ` (${details})`;
+    }
+    
+    if (statusEl) {
+        statusEl.textContent = `${emoji} ${text}`;
+        statusEl.style.color = color;
+    }
+    
+    if (sidebarStatusEl) {
+        sidebarStatusEl.innerHTML = `<span style="color: ${color};">${emoji}</span> ${text}`;
+        sidebarStatusEl.title = details ? `${text}: ${details}` : text;
+    }
+};
+
 const migrateState = (data) => {
     if (!data) return data;
     if (!data.budgets) data.budgets = {};
@@ -156,6 +190,7 @@ const migrateState = (data) => {
 };
 
 const loadData = async () => {
+    setSyncStatus('syncing');
     // 1. Try to load from LocalStorage first
     const localData = localStorage.getItem(STORAGE_KEY);
     if (localData) {
@@ -171,7 +206,8 @@ const loadData = async () => {
             saveDataLocal();
             updateUI();
             // Force save to cloud once to ensure migration is synced
-            saveData();
+            await saveData();
+            setSyncStatus('success');
         } else {
             // First time cloud setup
             if (!localData) {
@@ -180,9 +216,15 @@ const loadData = async () => {
                 state.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
             }
             await saveData();
+            setSyncStatus('success');
         }
     } catch (e) {
         console.error("Cloud Error:", e);
+        if (e.code === 'permission-denied') {
+            setSyncStatus('error', 'Quyền truy cập bị chặn - Vui lòng kiểm tra Firebase Rules');
+        } else {
+            setSyncStatus('error', e.message || 'Lỗi kết nối');
+        }
     }
 
     // 3. Set up Real-time Sync
@@ -195,6 +237,14 @@ const loadData = async () => {
                 saveDataLocal();
                 updateUI();
             }
+            setSyncStatus('success');
+        }
+    }, (error) => {
+        console.error("Snapshot Cloud Error:", error);
+        if (error.code === 'permission-denied') {
+            setSyncStatus('error', 'Quyền truy cập bị chặn');
+        } else {
+            setSyncStatus('error', error.message || 'Mất kết nối');
         }
     });
 };
@@ -205,10 +255,17 @@ const saveDataLocal = () => {
 
 const saveData = async () => {
     saveDataLocal();
+    setSyncStatus('syncing');
     try {
         await docRef.set(state);
+        setSyncStatus('success');
     } catch (e) {
         console.error("Error saving to cloud:", e);
+        if (e.code === 'permission-denied') {
+            setSyncStatus('error', 'Quyền truy cập bị chặn - Vui lòng kiểm tra Firebase Rules');
+        } else {
+            setSyncStatus('error', e.message || 'Lỗi kết nối');
+        }
     }
 };
 
