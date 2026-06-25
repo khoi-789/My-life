@@ -2147,7 +2147,8 @@ const renderGoldPurchases = () => {
     }
 
     // Sort by date descending
-    const sorted = [...filteredPurchases].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const validPurchases = filteredPurchases.filter(p => p && typeof p === 'object');
+        const sorted = validPurchases.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 
     sorted.forEach(p => {
         totalCost += p.cost;
@@ -2787,7 +2788,8 @@ window.renderSilverPurchases = () => {
         return;
     }
 
-    const sorted = [...filteredPurchases].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const validPurchases = filteredPurchases.filter(p => p && typeof p === 'object');
+        const sorted = validPurchases.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
     
     sorted.forEach(p => {
         try {
@@ -3021,6 +3023,7 @@ const addSilverPurchase = () => {
     
     saveData();
     clearSilverPurchaseForm();
+    if (typeof renderAssets === 'function') renderAssets();
     updateSilverAmountFromTicks(); 
 };
 
