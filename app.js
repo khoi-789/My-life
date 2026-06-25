@@ -945,10 +945,10 @@ const setupEventListeners = () => {
     }
 
     // Gold Purchase Filter
-    document.querySelectorAll('.filter-btn').forEach(btn => {
+    document.querySelectorAll('.gold-filter-group .filter-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
             // 1. Cập nhật UI nút active
-            document.querySelectorAll('.filter-btn').forEach(b => {
+            document.querySelectorAll('.gold-filter-group .filter-btn').forEach(b => {
                 b.classList.remove('active');
                 b.style.background = 'none';
                 b.style.color = 'var(--text-main)';
@@ -2750,6 +2750,7 @@ window.switchAssetTab = (tabName) => {
 };
 
 window.renderSilverPurchases = () => {
+    try {
     if (!els.silverPurchaseList) return;
     
     els.silverPurchaseList.innerHTML = '';
@@ -2789,6 +2790,8 @@ window.renderSilverPurchases = () => {
     const sorted = [...filteredPurchases].sort((a, b) => new Date(b.date) - new Date(a.date));
     
     sorted.forEach(p => {
+        try {
+            if (!p || typeof p !== 'object') return;
         const row = document.createElement('tr');
         row.className = 'hoverable-row';
         const formattedDate = new Date(p.date).toLocaleDateString('vi-VN');
@@ -2840,6 +2843,9 @@ window.renderSilverPurchases = () => {
             </td>
         `;
         els.silverPurchaseList.appendChild(row);
+        } catch (e) {
+            console.error("Crash inside sorted.forEach:", p, e);
+        }
     });
 
     if (els.totalSilverCost) els.totalSilverCost.textContent = formatCurrency(totalCost);
@@ -2857,6 +2863,9 @@ window.renderSilverPurchases = () => {
     }
     
     calculateInitialSilverTickSum();
+    } catch (e) {
+        console.error("Crash inside renderSilverPurchases:", e);
+    }
 };
 
 const setupSilverCheckboxDelegation = () => {
