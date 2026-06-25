@@ -2946,10 +2946,30 @@ const calculateInitialSilverTickSum = () => {
     if (targetUnit === 'cay') finalAmount = totalInChi / 10;
     else if (targetUnit === 'kg') finalAmount = totalInChi / 266.6667;
 
-    els.selectedSilverSum.textContent = finalAmount.toFixed(3).replace(/\.?0+$/, '') + (targetUnit === 'kg' ? ' Kg' : (targetUnit === 'cay' ? ' Lượng' : ' Chỉ'));
+    
+    
+    // Update summary box properly
     if (els.selectedSilverTotalDisplay) {
-        els.selectedSilverTotalDisplay.style.display = totalInChi > 0 ? 'block' : 'none';
+        if (totalInChi > 0) {
+            els.selectedSilverTotalDisplay.style.display = 'block';
+            
+            const chiStr = totalInChi.toFixed(3).replace(/\.?0+$/, '');
+            if (els.selectedSilverSum) els.selectedSilverSum.textContent = `${chiStr} Chỉ`;
+            
+            let unitStr = (targetUnit === 'kg' ? 'Kg' : (targetUnit === 'cay' ? 'Lượng' : 'Chỉ'));
+            let convertedStr = finalAmount.toFixed(3).replace(/\.?0+$/, '') + ' ' + unitStr;
+            if (els.selectedSilverConverted) els.selectedSilverConverted.textContent = convertedStr;
+            
+            const currentPrice = state.assets.manualSilverPrice || 0;
+            if (els.selectedSilverPrice) els.selectedSilverPrice.textContent = formatCurrency(currentPrice);
+            
+            const totalMoney = finalAmount * currentPrice;
+            if (els.selectedSilverTotalMoney) els.selectedSilverTotalMoney.textContent = formatCurrency(totalMoney);
+        } else {
+            els.selectedSilverTotalDisplay.style.display = 'none';
+        }
     }
+
     
     if (els.silverSelectAll) {
         const checkboxes = els.silverPurchaseList.querySelectorAll('.silver-row-checkbox');
@@ -3097,7 +3117,7 @@ const addSilverPurchase = () => {
     updateSilverAmountFromTicks(); 
 };
 
-const editSilverPurchase = (id) => {
+window.editSilverPurchase = (id) => {
     const p = (state.assets.silverPurchases || []).find(item => String(item.id) === String(id));
     if (!p) return;
     
@@ -3123,7 +3143,7 @@ const editSilverPurchase = (id) => {
     document.getElementById('silver-purchase-form-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
 
-const deleteSilverPurchase = (id) => {
+window.deleteSilverPurchase = (id) => {
     if (confirm('Bạn có chắc chắn muốn xóa giao dịch bạc này?')) {
         if (state.assets.silverPurchases) {
             state.assets.silverPurchases = state.assets.silverPurchases.filter(p => String(p.id) !== String(id));
