@@ -3172,8 +3172,8 @@ const clearSilverPurchaseForm = () => {
 };
 
 window.addSilverPurchase = addSilverPurchase;
-window.editSilverPurchase = editSilverPurchase;
-window.deleteSilverPurchase = deleteSilverPurchase;
+
+
 
 
 const bindSilverEvents = () => {
