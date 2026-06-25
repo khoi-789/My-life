@@ -2022,7 +2022,13 @@ const renderAssets = () => {
         if (els.goldUnitSelect) els.goldUnitSelect.value = state.assets.goldUnit || 'chi';
         
         if (els.silverAmountInput) els.silverAmountInput.value = state.assets.silverAmount || '';
-        if (els.silverUnitSelect) els.silverUnitSelect.value = state.assets.silverUnit || 'chi';
+        if (els.silverUnitSelect) {
+            els.silverUnitSelect.value = state.assets.silverUnit || 'chi';
+            const unitValue = els.silverUnitSelect.value;
+            const unitName = unitValue === 'kg' ? 'Kg' : (unitValue === 'cay' ? 'Lượng' : 'Chỉ');
+            if (els.silverPriceLabel) els.silverPriceLabel.innerHTML = `<i class="ph ph-tag"></i> Giá bạc (VND / ${unitName})`;
+            if (els.silverSummaryUnitName) els.silverSummaryUnitName.textContent = unitName;
+        }
         
         if (els.bankSavingsInput && state.assets.bankSavings > 0) {
             els.bankSavingsInput.value = new Intl.NumberFormat('vi-VN').format(state.assets.bankSavings);
@@ -3126,10 +3132,10 @@ window.editSilverPurchase = (id) => {
     els.silverPurchaseEditId.value = p.id;
     els.silverPurchaseAmount.value = p.amount;
     els.silverPurchaseUnit.value = p.unit;
-    els.silverPurchaseUnitPrice.value = p.unitPrice ? formatNumber(p.unitPrice) : '';
+    els.silverPurchaseUnitPrice.value = p.unitPrice ? new Intl.NumberFormat('vi-VN').format(p.unitPrice) : '';
     els.silverPurchaseType.value = p.type || '';
     els.silverPurchaseCategory.value = p.category || 'bạc tích trữ';
-    els.silverPurchaseCost.value = p.cost ? formatNumber(p.cost) : '';
+    els.silverPurchaseCost.value = p.cost ? new Intl.NumberFormat('vi-VN').format(p.cost) : '';
     els.silverPurchaseShop.value = p.shop || '';
     els.silverPurchaseAddress.value = p.address || '';
     els.silverPurchaseNote.value = p.note || '';
