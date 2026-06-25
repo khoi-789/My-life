@@ -386,9 +386,14 @@ const els = {
     silverAmountInput: document.getElementById('silver-amount'),
     silverUnitSelect: document.getElementById('silver-unit'),
     btnSaveSilverAmount: document.getElementById('btn-save-silver-amount'),
-    manualSilverPriceKg: document.getElementById('manual-silver-price-kg'),
-    manualSilverPriceCay: document.getElementById('manual-silver-price-cay'),
-    manualSilverPriceChi: document.getElementById('manual-silver-price-chi'),
+    manualSilverPrice: document.getElementById('manual-silver-price'),
+    silverPriceLabel: document.getElementById('silver-price-label'),
+    selectedSilverTotalDisplay: document.getElementById('selected-silver-total-display'),
+    selectedSilverSum: document.getElementById('selected-silver-sum'),
+    selectedSilverConverted: document.getElementById('selected-silver-converted'),
+    silverSummaryUnitName: document.getElementById('silver-summary-unit-name'),
+    selectedSilverPrice: document.getElementById('selected-silver-price'),
+    selectedSilverTotalMoney: document.getElementById('selected-silver-total-money'),
     btnSaveSilverPrice: document.getElementById('btn-save-silver-price'),
     silverCalcBreakdown: document.getElementById('silver-calc-breakdown'),
 
@@ -579,6 +584,15 @@ Chart.register(centerTextPlugin);
 const init = async () => {
     await loadData();
     setupEventListeners();
+    
+    // Set initial label for silver
+    if (els.silverUnitSelect && els.silverPriceLabel) {
+        const unitValue = els.silverUnitSelect.value;
+        const unitName = unitValue === 'kg' ? 'Kg' : (unitValue === 'cay' ? 'Lượng' : 'Chỉ');
+        els.silverPriceLabel.innerHTML = `<i class="ph ph-tag"></i> Giá bạc (VND / ${unitName})`;
+        if (els.silverSummaryUnitName) els.silverSummaryUnitName.textContent = unitName;
+    }
+
     updateUI();
     
     // Set current date on header
@@ -1970,19 +1984,44 @@ const renderAssets = () => {
     // 3. Bank Savings (already determined above)
     // const bankSavings = ...
 
+    // Calculate Silver Value
+    let totalSilverInTarget = 0;
+    const silverAmt = state.assets.silverAmount || 0;
+    const silverPrice = state.assets.manualSilverPrice || 0;
+    const silverValue = silverAmt * silverPrice;
+
     // 4. Grand Total
-    const totalAsset = appBalance + bankSavings + goldValue;
+    const totalAsset = appBalance + bankSavings + goldValue + silverValue;
 
     // Update UI
     els.totalAssetValue.textContent = formatCurrency(totalAsset);
     els.assetAppBalance.textContent = formatCurrency(appBalance);
     els.assetBankBalance.textContent = formatCurrency(bankSavings);
     els.assetGoldValue.textContent = formatCurrency(goldValue);
+    
+    // Add silver asset row dynamically if it exists (or just rely on the new UI)
+    let silverAssetRow = document.getElementById('asset-silver-value-row');
+    if (!silverAssetRow && document.querySelector('.assets-summary-list')) {
+        const list = document.querySelector('.assets-summary-list');
+        const row = document.createElement('div');
+        row.id = 'asset-silver-value-row';
+        row.className = 'summary-item';
+        row.innerHTML = `<span class="label"><i class="ph ph-sketch-logo"></i> Giá trị Bạc:</span><span class="value" id="asset-silver-value">0 ₫</span>`;
+        list.appendChild(row);
+    }
+    const silverValEl = document.getElementById('asset-silver-value');
+    if (silverValEl) {
+        silverValEl.textContent = formatCurrency(silverValue);
+    }
 
     if (!renderAssets._inputsInitialized) {
         renderAssets._inputsInitialized = true;
         if (els.goldAmountInput) els.goldAmountInput.value = state.assets.goldAmount || '';
         if (els.goldUnitSelect) els.goldUnitSelect.value = state.assets.goldUnit || 'chi';
+        
+        if (els.silverAmountInput) els.silverAmountInput.value = state.assets.silverAmount || '';
+        if (els.silverUnitSelect) els.silverUnitSelect.value = state.assets.silverUnit || 'chi';
+        
         if (els.bankSavingsInput && state.assets.bankSavings > 0) {
             els.bankSavingsInput.value = new Intl.NumberFormat('vi-VN').format(state.assets.bankSavings);
         }
@@ -2808,13 +2847,21 @@ window.renderSilverPurchases = () => {
 
         const isSelected = state.assets.selectedSilverPurchaseIds?.some(sid => String(sid) === String(p.id));
         
-        // Calculate difference for this specific row based on its unit
+        // Calculate difference for this specific row based on standard reference price
         let profitDisplay = '-';
         let profitColor = 'var(--text-muted)';
-        const currentPrice = state.assets.manualSilverPrices ? (state.assets.manualSilverPrices[p.unit] || 0) : 0;
+        const currentPrice = state.assets.manualSilverPrice || 0;
         
         if (currentPrice > 0 && p.cost) {
-            const currentValue = p.amount * currentPrice;
+            // Need to convert this row's amount into the currently selected TARGET unit to multiply with price
+            const targetUnit = state.assets.silverUnit || 'chi';
+            let amountInChi = (p.unit === 'kg') ? p.amount * 266.6667 : (p.unit === 'cay' ? p.amount * 10 : p.amount);
+            
+            let amountInTarget = amountInChi;
+            if (targetUnit === 'cay') amountInTarget = amountInChi / 10;
+            else if (targetUnit === 'kg') amountInTarget = amountInChi / 266.6667;
+            
+            const currentValue = amountInTarget * currentPrice;
             const profit = currentValue - p.cost;
             profitDisplay = (profit >= 0 ? '+' : '') + formatCurrency(profit);
             profitColor = profit >= 0 ? 'var(--success)' : 'var(--danger)';
@@ -2952,6 +2999,29 @@ const updateSilverAmountFromTicks = () => {
     
     state.assets.silverAmount = finalAmount;
     state.assets.silverUnit = targetUnit;
+    
+    // Update summary box
+    if (els.selectedSilverTotalDisplay) {
+        if (totalInChi > 0) {
+            els.selectedSilverTotalDisplay.style.display = 'block';
+            
+            const chiStr = totalInChi.toFixed(3).replace(/\.?0+$/, '');
+            if (els.selectedSilverSum) els.selectedSilverSum.textContent = `${chiStr} Chỉ`;
+            
+            let unitStr = (targetUnit === 'kg' ? 'Kg' : (targetUnit === 'cay' ? 'Lượng' : 'Chỉ'));
+            let convertedStr = finalAmount.toFixed(3).replace(/\.?0+$/, '') + ' ' + unitStr;
+            if (els.selectedSilverConverted) els.selectedSilverConverted.textContent = convertedStr;
+            
+            const currentPrice = state.assets.manualSilverPrice || 0;
+            if (els.selectedSilverPrice) els.selectedSilverPrice.textContent = formatCurrency(currentPrice);
+            
+            const totalMoney = finalAmount * currentPrice;
+            if (els.selectedSilverTotalMoney) els.selectedSilverTotalMoney.textContent = formatCurrency(totalMoney);
+        } else {
+            els.selectedSilverTotalDisplay.style.display = 'none';
+        }
+    }
+    
     saveData(); 
     
     if (typeof renderAssets === 'function') {
@@ -3133,14 +3203,24 @@ const bindSilverEvents = () => {
 
     if (els.btnSaveSilverPrice) {
         els.btnSaveSilverPrice.addEventListener('click', () => {
-            const kg = parseInt(els.manualSilverPriceKg.value.replace(/\D/g, '')) || 0;
-            const cay = parseInt(els.manualSilverPriceCay.value.replace(/\D/g, '')) || 0;
-            const chi = parseInt(els.manualSilverPriceChi.value.replace(/\D/g, '')) || 0;
-            
-            state.assets.manualSilverPrices = { kg, cay, chi };
+            const price = parseInt(els.manualSilverPrice.value.replace(/\D/g, '')) || 0;
+            state.assets.manualSilverPrice = price;
             saveData();
-            showToast('Đã lưu bộ giá Bạc thành công!', 'success');
+            showToast('Đã lưu giá Bạc thành công!', 'success');
             if (typeof renderAssets === 'function') renderAssets();
+            
+            // Re-format the input right away
+            if (price > 0) {
+                els.manualSilverPrice.value = new Intl.NumberFormat('vi-VN').format(price);
+            }
+        });
+    }
+    if (els.manualSilverPrice) {
+        els.manualSilverPrice.addEventListener('input', function (e) {
+            let value = e.target.value.replace(/[^0-9]/g, '');
+            if (value !== '') {
+                e.target.value = new Intl.NumberFormat('vi-VN').format(parseInt(value));
+            }
         });
     }
 

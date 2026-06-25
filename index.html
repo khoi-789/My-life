@@ -486,32 +486,25 @@
                                 </div>
                             </div>
 
-                            <!-- Giá bạc thủ công theo từng đơn vị -->
+                                                        <!-- Giá bạc thủ công 1 đơn vị -->
                             <div class="form-group" style="margin-top:20px;">
-                                <label style="color:var(--primary); font-weight:600;"><i class="ph ph-tag"></i> Giá bạc thị trường (VND)</label>
+                                <label style="color:var(--primary); font-weight:600;" id="silver-price-label"><i class="ph ph-tag"></i> Giá bạc (VND / Chỉ)</label>
                                 
-                                <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
-                                    <div style="display:flex; gap:8px; align-items:center;">
-                                        <span style="width: 60px; font-size: 13px; font-weight: 500;">/ Kg:</span>
-                                        <input type="text" id="manual-silver-price-kg" class="glass-input" placeholder="Giá 1 Kg bạc..." style="flex:1;">
-                                    </div>
-                                    <div style="display:flex; gap:8px; align-items:center;">
-                                        <span style="width: 60px; font-size: 13px; font-weight: 500;">/ Lượng:</span>
-                                        <input type="text" id="manual-silver-price-cay" class="glass-input" placeholder="Giá 1 lượng bạc..." style="flex:1;">
-                                    </div>
-                                    <div style="display:flex; gap:8px; align-items:center;">
-                                        <span style="width: 60px; font-size: 13px; font-weight: 500;">/ Chỉ:</span>
-                                        <input type="text" id="manual-silver-price-chi" class="glass-input" placeholder="Giá 1 chỉ bạc..." style="flex:1;">
-                                    </div>
+                                <div style="display:flex; gap:8px; margin-top:8px;">
+                                    <input type="text" id="manual-silver-price" class="glass-input" placeholder="Nhập giá..." style="flex:1;">
+                                    <button id="btn-save-silver-price" class="btn btn-primary" style="padding:0 14px; height:42px; font-size:12px; white-space:nowrap; flex-shrink:0;">
+                                        <i class="ph ph-floppy-disk"></i> Lưu giá
+                                    </button>
                                 </div>
-
-                                <button id="btn-save-silver-price" class="btn btn-primary w-full" style="margin-top:12px; height:42px; font-size:13px; font-weight:600; justify-content:center;">
-                                    <i class="ph ph-floppy-disk"></i> Lưu bộ giá bạc
-                                </button>
                             </div>
 
                             <!-- Kết quả quy đổi -->
-                            <div id="silver-calc-breakdown" style="margin-top:16px; padding:14px; background:var(--primary-light); border-radius:12px; border:1px solid var(--primary); font-size:13px; line-height:1.8; display:none;"></div>
+                            <div id="selected-silver-total-display" style="margin-top: 15px; padding: 15px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; display: none;">
+                                <div style="margin-bottom: 5px; color: var(--text-main); font-size: 14px;">Chi tiết: <strong id="selected-silver-sum">0 Chỉ</strong></div>
+                                <div style="margin-bottom: 5px; color: var(--text-main); font-size: 14px;">Quy đổi: <strong id="selected-silver-converted">0 Chỉ</strong></div>
+                                <div style="margin-bottom: 8px; color: var(--text-main); font-size: 14px;">Giá 1 <span id="silver-summary-unit-name">Chỉ</span>: <strong id="selected-silver-price">0 ₫</strong></div>
+                                <div style="color: var(--primary); font-size: 16px; font-weight: 700;">= <span id="selected-silver-total-money">0 ₫</span></div>
+                            </div>
                         </div>
                     </div>
 
