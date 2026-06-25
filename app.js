@@ -1999,6 +1999,8 @@ const renderAssets = () => {
     els.assetBankBalance.textContent = formatCurrency(bankSavings);
     els.assetGoldValue.textContent = formatCurrency(goldValue);
     
+    if (typeof renderSilverPurchases === 'function') renderSilverPurchases();
+    
     // Add silver asset row dynamically if it exists (or just rely on the new UI)
     let silverAssetRow = document.getElementById('asset-silver-value-row');
     if (!silverAssetRow && document.querySelector('.assets-summary-list')) {
@@ -3152,7 +3154,7 @@ window.deleteSilverPurchase = (id) => {
             state.assets.selectedSilverPurchaseIds = state.assets.selectedSilverPurchaseIds.filter(sid => String(sid) !== String(id));
         }
         saveData();
-        updateSilverAmountFromTicks(); 
+        if (typeof renderAssets === 'function') renderAssets();
         showToast('Đã xóa giao dịch!', 'success');
     }
 };
