@@ -1514,6 +1514,10 @@ const saveTransaction = () => {
 
 // --- Rendering View ---
 const updateUI = () => {
+    // Luôn đảm bảo danh sách được sắp xếp từ mới nhất đến cũ nhất
+    if (state.transactions) {
+        state.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
     calculateSummary();
     renderRecentTransactions();
     renderFullTransactionsTable();
@@ -3453,6 +3457,7 @@ window.confirmWithdrawSavings = () => {
     };
     
     state.transactions.push(newTx);
+    state.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
     saveData();
     updateUI();
     
