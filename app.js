@@ -24,6 +24,7 @@ const STORAGE_KEY = 'family_finance_data';
 
 const DEFAULT_CATEGORIES = {
     income: [
+        { id: 'withdraw_savings', name: 'Rút Tích Lũy', icon: 'ph-piggy-bank', description: 'Chuyển tiền từ tổng tích lũy cũ sang thu nhập của tháng hiện tại.' },
         { id: 'inc_salary', name: 'Tiền lương', icon: '💰', description: 'Các khoản thu nhập chính từ lương cứng, tiền công nhận được hàng tháng theo hợp đồng lao động.' },
         { id: 'inc_bonus', name: 'Tiền thưởng', icon: '🎁', description: 'Thưởng KPI, thưởng lễ tết, thưởng nóng dự án hoặc các khoản tiền mặt được tặng.' },
         { id: 'inc_invest', name: 'Đầu tư', icon: '📈', description: 'Lãi tiết kiệm ngân hàng, cổ tức từ chứng khoán, lợi nhuận từ kinh doanh riêng hoặc cho thuê nhà.' },
