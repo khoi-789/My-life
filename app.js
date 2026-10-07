@@ -1185,7 +1185,7 @@ const setupEventListeners = () => {
 
         // Handle Budget Save
         if (type === 'expense' && els.catBudgetInput && els.catBudgetInput.value !== '') {
-            const val = parseFloat(els.catBudgetInput.value.replace(/\./g, ''));
+            const val = parseFloat(els.catBudgetInput.value.replace(/\D/g, ''));
             if (!isNaN(val) && val >= 0) {
                 state.budgets[targetId] = val;
             } else {
@@ -1195,12 +1195,13 @@ const setupEventListeners = () => {
              if (type === 'expense') state.budgets[targetId] = 0;
         }
 
-        saveData();
-        closeCatModal();
-        populateCategories(document.querySelector('input[name="type"]:checked').value);
-        renderSettings();
-        updateUI();
-        alert(catId ? 'Đã cập nhật hạng mục!' : 'Đã thêm hạng mục mới thành công!');
+        saveData().then(() => {
+            closeCatModal();
+            populateCategories(document.querySelector('input[name="type"]:checked').value);
+            renderSettings();
+            updateUI();
+            alert(catId ? 'Đã cập nhật hạng mục!' : 'Đã thêm hạng mục mới thành công!');
+        });
     });
 };
 
