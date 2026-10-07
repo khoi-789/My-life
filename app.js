@@ -31,6 +31,7 @@ const DEFAULT_CATEGORIES = {
         { id: 'inc_other', name: 'Thu nhập khác', icon: '💵', description: 'Tiền được người thân biếu, tiền bán đồ cũ thanh lý hoặc các khoản thu nhập vãng lai không định kỳ.' }
     ],
     expense: [
+        { id: 'exp_stash', name: 'Tạm cất tiết kiệm', icon: '🔒', description: 'Khoản tiền ảo trích ra đầu tháng để khóa ngân sách chi tiêu. Sửa hoặc xóa đi vào cuối tháng để tiền dư tự động chảy về Tích lũy.' },
         { id: 'exp_husband', name: 'Quỹ của Chồng', icon: '🧔🏻‍♂️', description: 'Khoản tiền tiêu vặt, quỹ cá nhân đưa cho chồng hàng tháng để tự quản lý chi tiêu.' },
         { id: 'exp_health', name: 'Thể thao & Sức khỏe', icon: '🏸', description: 'Chi phí chơi thể thao (cầu lông, gym...), thuê sân, mua phụ kiện thể thao, khám chữa bệnh, thuốc men.' },
         { id: 'exp_food', name: 'Ăn uống', icon: '🍔', description: 'Bao gồm đi chợ, siêu thị mua thực phẩm, ăn sáng, cơm trưa văn phòng, cà phê, trà sữa, ăn tiệm và các buổi liên hoan.' },
