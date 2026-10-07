@@ -184,11 +184,7 @@ const migrateState = (data) => {
         });
     });
 
-    // 3. Set specific budget for Rent & Bills if it's not set or needs reset
-    if (data.budgets) {
-        data.budgets['exp_bill'] = 7000000;
-    }
-
+    
     // 4. Force update icons for debt if they are the old ones
     data.categories.debt.forEach(c => {
         const def = DEFAULT_CATEGORIES.debt.find(d => d.id === c.id);
